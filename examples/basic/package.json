@@ -6,6 +6,7 @@
   "scripts": {
     "build:mirror": "tsx src/build-mirror.ts",
     "start": "tsx src/server.ts",
+    "dev": "tsx watch src/server.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "feedback:fetch": "tsx --env-file=.env src/dev/resFeedback/fetch.ts",
     "feedback:attachUnit": "tsx src/dev/resFeedback/attachUnit.ts",

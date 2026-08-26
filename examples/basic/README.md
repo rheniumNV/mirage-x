@@ -23,6 +23,8 @@ Writes `output/output.brson` and `output/version.json`. Re-run after changing Un
 
 ```bash
 pnpm --filter @mirage-x/example-basic start
+# or with reload on source changes:
+pnpm --filter @mirage-x/example-basic dev
 ```
 
 Listens on `http://localhost:3100/`.
