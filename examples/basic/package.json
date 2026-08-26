@@ -4,14 +4,26 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "tsx src/main.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "build:mirror": "tsx src/build-mirror.ts",
+    "start": "tsx src/server.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "feedback:fetch": "tsx --env-file=.env src/dev/resFeedback/fetch.ts",
+    "feedback:attachUnit": "tsx src/dev/resFeedback/attachUnit.ts",
+    "feedback:unit": "tsx --env-file=.env src/dev/resFeedback/feedbackUnit.ts"
   },
   "dependencies": {
-    "@mirage-x/core": "^0.0.0"
+    "@mirage-x/core": "^0.0.0",
+    "@mirage-x/mirror": "^0.0.0",
+    "express": "^4.19.2",
+    "react": "^18.3.1",
+    "ws": "^8.17.0"
   },
   "devDependencies": {
+    "@types/express": "^4.17.21",
     "@types/node": "^22.15.21",
-    "tsx": "^4.19.4"
+    "@types/react": "^18.3.3",
+    "@types/ws": "^8.5.10",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
   }
 }

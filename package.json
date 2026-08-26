@@ -6,11 +6,12 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "build": "pnpm --filter @mirage-x/core build",
+    "build": "pnpm -r --filter=./packages/* build",
     "dev": "pnpm --filter @mirage-x/core dev",
     "typecheck": "pnpm -r --filter=./packages/* typecheck"
   },
   "devDependencies": {
+    "@types/node": "^22.20.1",
     "typescript": "^5.8.3"
   }
 }

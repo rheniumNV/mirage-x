@@ -3,7 +3,10 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "composite": true
+    "composite": true,
+    "jsx": "react-jsx",
+    "verbatimModuleSyntax": false,
+    "lib": ["ES2022"]
   },
   "include": ["src"]
 }

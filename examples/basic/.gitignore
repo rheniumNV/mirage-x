@@ -1,0 +1,5 @@
+node_modules
+.env
+output/
+src/dev/resFeedback/ResFeedbackOriginal.json
+src/dev/resFeedback/ResFeedbackMetaOriginal.json

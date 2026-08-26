@@ -8,6 +8,8 @@ preferWorkspacePackages: true
 
 overrides:
   "@mirage-x/core": "workspace:*"
+  "@mirage-x/virtual-object": "workspace:*"
+  "@mirage-x/mirror": "workspace:*"
 
 allowBuilds:
   esbuild: true
