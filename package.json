@@ -1,0 +1,16 @@
+{
+  "name": "mirage-x",
+  "private": true,
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "build": "pnpm --filter @mirage-x/core build",
+    "dev": "pnpm --filter @mirage-x/core dev",
+    "typecheck": "pnpm -r --filter=./packages/* typecheck"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

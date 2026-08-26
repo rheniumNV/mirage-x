@@ -1,0 +1,13 @@
+packages:
+  - "packages/*"
+  - "examples/*"
+
+linkWorkspacePackages: true
+saveWorkspaceProtocol: false
+preferWorkspacePackages: true
+
+overrides:
+  "@mirage-x/core": "workspace:*"
+
+allowBuilds:
+  esbuild: true
