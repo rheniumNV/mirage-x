@@ -1,6 +1,5 @@
 import axios from "axios";
 import { jwtVerify, importSPKI } from "jose";
-import { randomUUID } from "node:crypto";
 import type { ReactElement } from "react";
 import type { Logger } from "../logger/index.js";
 import type {
@@ -12,47 +11,12 @@ import type { MainRootProps } from "../main/mainRootProps.js";
 import { DummyReactRenderer } from "./dummyReactRenderer.js";
 import { render } from "./render.js";
 
+/** Tracks which units have been sent to the client, to order sync events. */
 type UnitInstance = {
   id: string;
-  parentId?: string;
-  code?: string;
-  props: { [key: string]: { type: string; value: unknown } };
+  parentId: string;
+  code: string;
   generated: boolean;
-};
-
-const mergeUnit = (
-  unit1: UnitInstance | undefined,
-  unit2: UnitInstance,
-): UnitInstance => ({
-  ...(unit1 ?? {}),
-  ...unit2,
-  props: { ...(unit1?.props ?? {}), ...unit2.props },
-});
-
-type RendedUnit = {
-  id: string;
-  code?: string;
-  props: { [key: string]: unknown };
-  children: RendedUnit[];
-};
-
-const renderTree = (
-  unitMap: Map<string, UnitInstance>,
-  parentId: string,
-  calcProps: (unit: UnitInstance) => UnitInstance["props"],
-): RendedUnit[] => {
-  const units: RendedUnit[] = [];
-  unitMap.forEach((unit) => {
-    if (unit.parentId === parentId) {
-      units.push({
-        id: unit.id,
-        code: unit.code,
-        props: calcProps(unit),
-        children: renderTree(unitMap, unit.id, calcProps),
-      });
-    }
-  });
-  return units;
 };
 
 const isValidUnit = (
@@ -95,12 +59,10 @@ export class LogicManager {
   authUrl: string;
   closed = false;
 
-  syncTreeCallback?: () => unknown;
   syncEventCallback?: (event: UnitChangeClientEvent) => unknown;
   syncFunctionMap: Map<string, (...args: unknown[]) => unknown> = new Map();
 
   unitUsages: Map<string, number> = new Map();
-  syncLock = false;
   propsSetter: (props: MainRootProps) => void = () => {};
 
   constructor(
@@ -164,35 +126,19 @@ export class LogicManager {
           event.unit.code,
           (this.unitUsages.get(event.unit.code) ?? 0) + 1,
         );
-        this.unitMap.set(
-          event.unit.id,
-          mergeUnit(this.unitMap.get(event.unit.id), {
-            id: event.unit.id,
-            parentId: event.unit.parentId,
-            code: event.unit.code,
-            props: {},
-            generated: false,
-          }),
-        );
+        this.unitMap.set(event.unit.id, {
+          id: event.unit.id,
+          parentId: event.unit.parentId,
+          code: event.unit.code,
+          generated: false,
+        });
         break;
       case "destroyUnit":
         this.unitMap.delete(event.unit.id);
         break;
-      case "updateProp": {
-        const existUnit = this.unitMap.get(event.unit.id);
-        const newUnit: UnitInstance = {
-          id: event.unit.id,
-          props: {
-            [event.unit.prop.key]: {
-              type: event.unit.prop.type,
-              value: event.unit.prop.value ?? "",
-            },
-          },
-          generated: existUnit?.generated ?? false,
-        };
-        this.unitMap.set(event.unit.id, mergeUnit(existUnit, newUnit));
+      case "updateProp":
+        // Sent once the unit itself has been generated (see isValidUnit).
         break;
-      }
       case "customEvent":
         this.syncEventCallback?.(event);
         return;
@@ -224,14 +170,6 @@ export class LogicManager {
       };
       wait4Send();
     }
-
-    if (!this.syncLock) {
-      this.syncLock = true;
-      setTimeout(() => {
-        this.syncLock = false;
-        this.syncTreeCallback?.();
-      }, 1);
-    }
   }
 
   close() {
@@ -241,37 +179,11 @@ export class LogicManager {
     this.unitUsages.clear();
     this.syncFunctionMap.clear();
     this.authentication = undefined;
-    this.syncTreeCallback = undefined;
     this.syncEventCallback = undefined;
     this.propsSetter = () => {};
     console.info("close logic", this.ownerId);
   }
 
-  render() {
-    const functionMap = new Map<string, (...args: unknown[]) => unknown>();
-    const tree = renderTree(this.unitMap, "root", (unit: UnitInstance) =>
-      Object.entries(unit.props)
-        .map(([key, prop]) => {
-          switch (prop.type) {
-            case "Function": {
-              const id = randomUUID();
-              functionMap.set(
-                id,
-                prop.value as (...args: unknown[]) => unknown,
-              );
-              return { key, prop: { type: "Function", value: id } };
-            }
-            default:
-              return { key, prop };
-          }
-        })
-        .reduce(
-          (acc, { key, prop }) => ({ ...acc, [key]: prop }),
-          {} as UnitInstance["props"],
-        ),
-    );
-    return { tree, functionMap };
-  }
 
   syncProps() {
     this.propsSetter({
