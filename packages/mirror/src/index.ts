@@ -10,8 +10,12 @@ export {
   attachSimpleFrame,
   attachInstallFrame,
   convertRawFeedback,
+  readFeedback,
+  readFeedbackIfExists,
+  writeFeedback,
 } from "./feedback/index.js";
 export type {
   AttachUnitsOptions,
   AttachFeedbackPaths,
+  FeedbackFile,
 } from "./feedback/index.js";

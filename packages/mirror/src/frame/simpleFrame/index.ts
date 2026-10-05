@@ -1,6 +1,7 @@
-import type { ObjectContext, VirtualContext } from "@mirage-x/virtual-object";
+import type { VirtualContext } from "@mirage-x/virtual-object";
 import { VirtualContext as VC } from "@mirage-x/virtual-object";
-import ResFeedbackJson from "./ResFeedback.json" with { type: "json" };
+import { assetPath } from "../../assets.js";
+import { readFeedback } from "../../feedback/feedbackFile.js";
 
 export const generateSimpleFrame = (option: {
   appCode: string;
@@ -8,7 +9,7 @@ export const generateSimpleFrame = (option: {
   generateEnv: () => VirtualContext;
 }) => {
   const frameContextResult = VC.generate(
-    ResFeedbackJson as unknown as ObjectContext,
+    readFeedback(assetPath("frame/simpleFrame/ResFeedback.brson")),
   );
   if (frameContextResult.status === "FAILED") {
     throw new Error("Failed to generate frame context", {

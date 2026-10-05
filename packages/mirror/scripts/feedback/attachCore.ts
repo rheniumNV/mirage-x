@@ -8,5 +8,5 @@ const packageRoot = path.resolve(feedbackDir, "../..");
 
 attachCore({
   inputPath: feedbackDir,
-  outputPath: path.resolve(packageRoot, "src/core"),
+  outputPath: path.resolve(packageRoot, "assets/core"),
 });

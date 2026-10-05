@@ -4,7 +4,8 @@
   "description": "MirageX Resonite asset mirror builder (output.brson pipeline)",
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "assets/**/*.brson"
   ],
   "exports": {
     ".": {

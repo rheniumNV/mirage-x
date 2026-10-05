@@ -8,6 +8,7 @@ import {
 } from "@mirage-x/virtual-object";
 
 import { res2yaml } from "../util/res2yaml.js";
+import { writeFeedback } from "./feedbackFile.js";
 
 export type AttachFeedbackPaths = {
   inputPath: string;
@@ -40,9 +41,9 @@ const writeIfChanged = (option: {
   }
 
   fs.mkdirSync(option.outputPath, { recursive: true });
-  fs.writeFileSync(
-    path.resolve(option.outputPath, "ResFeedback.json"),
-    JSON.stringify(option.exported),
+  writeFeedback(
+    path.resolve(option.outputPath, "ResFeedback.brson"),
+    option.exported,
   );
   fs.writeFileSync(prevYamlPath, yaml);
 

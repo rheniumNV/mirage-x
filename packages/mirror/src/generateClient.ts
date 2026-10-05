@@ -1,14 +1,10 @@
-import type {
-  ObjectContext,
-  VirtualContext,
-} from "@mirage-x/virtual-object";
+import type { VirtualContext } from "@mirage-x/virtual-object";
 import {
   VirtualContext as VC,
   dynamicValueVariable,
 } from "@mirage-x/virtual-object";
-import RawResFeedbackJson from "./core/ResFeedback.json" with { type: "json" };
-
-const ResFeedbackJson = RawResFeedbackJson as unknown as ObjectContext;
+import { assetPath } from "./assets.js";
+import { readFeedback } from "./feedback/feedbackFile.js";
 
 export const generateClient = ({
   appCode,
@@ -47,7 +43,7 @@ export const generateClient = ({
     generateEnv: () => VirtualContext;
   }) => VirtualContext;
 }): VirtualContext => {
-  const result = VC.generate(ResFeedbackJson);
+  const result = VC.generate(readFeedback(assetPath("core/ResFeedback.brson")));
   if (result.status === "FAILED") {
     throw new Error(`${result.code} ${result.reason}`);
   }

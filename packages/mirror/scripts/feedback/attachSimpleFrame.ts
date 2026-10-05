@@ -8,5 +8,5 @@ const packageRoot = path.resolve(feedbackDir, "../..");
 
 attachSimpleFrame({
   inputPath: feedbackDir,
-  outputPath: path.resolve(packageRoot, "src/frame/simpleFrame"),
+  outputPath: path.resolve(packageRoot, "assets/frame/simpleFrame"),
 });
