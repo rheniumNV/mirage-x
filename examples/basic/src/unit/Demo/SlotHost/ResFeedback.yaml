@@ -197,7 +197,45 @@ Children:
         Components:
           ID: "?"
           Data: []
-        Children: []
+        Children:
+          - Name:
+              ID: "?"
+              Data: Child
+            Active:
+              ID: "?"
+              Data: true
+            ID: ID:Child:0
+            Persistent-ID: "?"
+            Position:
+              ID: "?"
+              Data:
+                - 0
+                - 0
+                - 0
+            Rotation:
+              ID: "?"
+              Data:
+                - 0
+                - 0
+                - 0
+                - 111111
+            Scale:
+              ID: "?"
+              Data:
+                - 111111
+                - 111111
+                - 111111
+            Tag:
+              ID: "?"
+              Data: ""
+            OrderOffset:
+              ID: "?"
+              Data: 0
+            Components:
+              ID: "?"
+              Data: []
+            Children: []
+            ParentReference: ""
         ParentReference: ""
       - Name:
           ID: "?"
@@ -497,7 +535,7 @@ Children:
                   Data: Refs.anchor
                 Reference:
                   ID: "?"
-                  Data: null
+                  Data: ID:Child:0
                 OverrideOnLink:
                   ID: "?"
                   Data: false
