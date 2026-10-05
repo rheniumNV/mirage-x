@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { afterEach, describe, it } from "node:test";
 
 import {
   UnitProp,
@@ -13,7 +13,10 @@ import {
   generated,
   mount,
   propUpdates,
+  unmountAll,
 } from "./harness.js";
+
+afterEach(unmountAll);
 
 const Host = generateMain(
   generateUnitConfig({
@@ -30,6 +33,7 @@ const Target = generateMain(
     propsConfig: {
       target: UnitProp.Slot(),
       label: UnitProp.String("default"),
+      offset: UnitProp.Float2([0, 0]),
       onClick: UnitProp.Function(() => {}),
     },
   }),
@@ -45,6 +49,7 @@ describe("generateMain: initial render", () => {
       [
         ["target", "Reference"],
         ["label", "String"],
+        ["offset", "Float2"],
         ["onClick", "Function"],
       ],
     );
@@ -80,28 +85,41 @@ describe("generateMain: initial render", () => {
 
 describe("generateMain: prop updates", () => {
   it("sends updateProp only when the value changes", async () => {
-    const control = createControl("a");
-    const { events, since } = await mount(
-      <control.Control>{(label) => <Target label={label} />}</control.Control>,
+    // `n` re-renders the parent without changing Target's values, so the
+    // dedupe in useSyncProp (not React's bail-out) is what is tested.
+    const control = createControl({ label: "a", x: 0, n: 0 });
+    const { events, since, settle } = await mount(
+      <control.Control>
+        {({ label, x }) => <Target label={label} offset={[x, 0]} />}
+      </control.Control>,
     );
     const target = generated(events, "Test/Target");
 
     let after = since();
-    await control.set("b");
+    await control.set({ label: "b", x: 0, n: 0 });
+    await settle();
     assert.deepEqual(propUpdates(after(), target.id), [
       { key: "label", type: "String", value: "b", option: {} },
     ]);
 
     after = since();
-    await control.set("b"); // same value: React bails out, nothing is sent
+    await control.set({ label: "b", x: 0, n: 1 }); // same label, new [0, 0] array
+    await settle();
     assert.deepEqual(propUpdates(after(), target.id), []);
+
+    after = since();
+    await control.set({ label: "b", x: 1, n: 1 });
+    await settle();
+    assert.deepEqual(propUpdates(after(), target.id), [
+      { key: "offset", type: "Float2", value: [1, 0], option: {} },
+    ]);
   });
 
   it("registers Function props in functionMap and replaces the old id", async () => {
     const first = () => {};
     const second = () => {};
     const control = createControl<() => void>(first);
-    const { events, functionMap, since } = await mount(
+    const { events, functionMap, since, settle } = await mount(
       <control.Control>{(fn) => <Target onClick={fn} />}</control.Control>,
     );
     const target = generated(events, "Test/Target");
@@ -112,6 +130,7 @@ describe("generateMain: prop updates", () => {
 
     const after = since();
     await control.set(second);
+    await settle();
     const [changed] = propUpdates(after(), target.id);
     const secondId = changed?.value as string;
     assert.notEqual(secondId, firstId);
@@ -172,7 +191,7 @@ describe("generateMain: Slot references", () => {
 
   it("clears the reference when the producer unmounts", async () => {
     const control = createControl(true);
-    const { events, since } = await mount(
+    const { events, since, settle } = await mount(
       <control.Control>{(show) => <RefApp showHost={show} />}</control.Control>,
     );
     const host = generated(events, "Test/Host");
@@ -181,6 +200,7 @@ describe("generateMain: Slot references", () => {
 
     const after = since();
     await control.set(false);
+    await settle();
     const later = after();
     assert.ok(
       later.some((e) => e.type === "destroyUnit" && e.unit.id === host.id),

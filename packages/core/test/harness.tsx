@@ -10,13 +10,34 @@ import type { UnitChangeServerEvent } from "../src/common/unitChangeEvent.js";
 import { MainRootContextProvider } from "../src/main/index.js";
 import { DummyReactRenderer } from "../src/server/dummyReactRenderer.js";
 
-/** Let React flush passive effects (and the re-renders they trigger). */
-export const flush = () => new Promise((resolve) => setTimeout(resolve, 20));
+const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+/**
+ * Wait until React has flushed effects and the re-renders they trigger:
+ * no new events for several consecutive macrotask turns (at most ~2s).
+ */
+export const flush = async (events: unknown[] = []) => {
+  let stableTurns = 0;
+  let last = events.length;
+  for (let turn = 0; turn < 400 && stableTurns < 5; turn++) {
+    await tick();
+    stableTurns = events.length === last ? stableTurns + 1 : 0;
+    last = events.length;
+  }
+};
+
+const mounted: Array<() => Promise<void>> = [];
+
+/** Unmount everything mounted by `mount` (call from `afterEach`). */
+export const unmountAll = async () => {
+  for (const unmount of mounted.splice(0)) await unmount();
+};
 
 /** Render `element` under a MainRoot that records every emitted event. */
 export const mount = async (element: ReactElement) => {
   const events: UnitChangeServerEvent[] = [];
   const functionMap = new Map<string, (...args: unknown[]) => unknown>();
+  const gate = createControl(true);
   DummyReactRenderer.render(
     <MainRootContextProvider
       value={{
@@ -27,14 +48,23 @@ export const mount = async (element: ReactElement) => {
         functionMap,
       }}
     >
-      {element}
+      <gate.Control>{(show) => (show ? element : null)}</gate.Control>
     </MainRootContextProvider>,
   );
-  await flush();
+  const settle = () => flush(events);
+  await settle();
+  const unmount = async () => {
+    await gate.set(false);
+    await settle();
+  };
+  mounted.push(unmount);
   return {
     events,
     functionMap,
-    /** Events emitted after this call. */
+    unmount,
+    /** Wait until no more events arrive (call after changing a control). */
+    settle,
+    /** Returns a getter for the events emitted after this call. */
     since: () => {
       const start = events.length;
       return () => events.slice(start);
@@ -42,7 +72,10 @@ export const mount = async (element: ReactElement) => {
   };
 };
 
-/** A piece of state that a test can change from outside the tree. */
+/**
+ * A piece of state that a test can change from outside the tree.
+ * After `set`, call the mount's `settle()` to wait for the resulting events.
+ */
 export const createControl = <S,>(initial: S) => {
   let setState: Dispatch<SetStateAction<S>> | undefined;
   const Control = ({ children }: { children: (state: S) => ReactNode }) => {
@@ -56,7 +89,7 @@ export const createControl = <S,>(initial: S) => {
     set: async (state: S) => {
       if (!setState) throw new Error("Control is not mounted");
       setState(() => state);
-      await flush();
+      await tick();
     },
   };
 };
