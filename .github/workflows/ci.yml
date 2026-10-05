@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # Cancel superseded PR runs only; keep every run on master.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      # Installs the pnpm version pinned in package.json (v6.1.0+ supports pnpm 12).
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build
+
+      # Runs after build: examples type-check against the packages' dist types.
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build example mirror (output.brson)
+        run: pnpm --filter @mirage-x/example-basic build:mirror
+
+      - name: Check example output
+        run: test -s examples/basic/output/output.brson
