@@ -6,7 +6,7 @@ import {
   useRef,
   type ReactNode,
 } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "node:crypto";
 import { useMainRootContext } from "../../main/index.js";
 import {
   isMirrorRef,
@@ -22,7 +22,7 @@ import {
 
 export const UnitContext = createContext<{ id: string }>({ id: "root" });
 
-const useUnitId = () => useMemo(() => uuidv4(), []);
+const useUnitId = () => useMemo(() => randomUUID(), []);
 
 const solveProp = <C extends DetailBase>(
   propConfig: UnitConfig<C>["syncPropConfigList"][number],
@@ -132,7 +132,7 @@ const useSyncProp = <C extends DetailBase>(
       if (functionIdRef.current) {
         functionMap.delete(functionIdRef.current);
       }
-      functionIdRef.current = uuidv4();
+      functionIdRef.current = randomUUID();
       functionMap.set(functionIdRef.current, func);
       return functionIdRef.current;
     });

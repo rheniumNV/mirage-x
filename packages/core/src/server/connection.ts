@@ -1,5 +1,5 @@
 import json2emap from "json2emap";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "node:crypto";
 import type { WebSocket } from "ws";
 import type { ReactElement } from "react";
 import type { Logger } from "../logger/index.js";
@@ -48,7 +48,7 @@ export class Connection {
     defaultAuthenticationToken?: string;
     eventCountSolver?: (eventCount: number) => number;
   }) {
-    this.id = uuidv4();
+    this.id = randomUUID();
     this.logger = init.logger.generateChildLogger({
       contextName: "connection",
       extraInfo: { connectionId: this.id },
