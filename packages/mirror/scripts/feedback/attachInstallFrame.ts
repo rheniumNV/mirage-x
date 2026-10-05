@@ -8,5 +8,5 @@ const packageRoot = path.resolve(feedbackDir, "../..");
 
 attachInstallFrame({
   inputPath: feedbackDir,
-  outputPath: path.resolve(packageRoot, "src/frame/installFrame"),
+  outputPath: path.resolve(packageRoot, "assets/frame/installFrame"),
 });

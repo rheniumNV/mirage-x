@@ -7,6 +7,7 @@ import {
 } from "@mirage-x/virtual-object";
 
 import { res2yaml } from "../util/res2yaml.js";
+import { writeFeedback } from "./feedbackFile.js";
 
 export type AttachUnitsOptions = {
   /** Directory containing ResFeedbackOriginal.json / ResFeedbackMetaOriginal.json */
@@ -140,9 +141,9 @@ export const attachUnits = (options: AttachUnitsOptions): void => {
           continue;
         }
 
-        fs.writeFileSync(
-          path.resolve(unitDir, "ResFeedback.json"),
-          JSON.stringify(unitObjectResult, null, 2),
+        writeFeedback(
+          path.resolve(unitDir, "ResFeedback.brson"),
+          unitObjectResult,
         );
         fs.writeFileSync(prevYamlPath, unitObjectYaml);
         fs.writeFileSync(

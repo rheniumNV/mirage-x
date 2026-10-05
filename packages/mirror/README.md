@@ -1,6 +1,6 @@
 # @mirage-x/mirror
 
-Builds Resonite mirror assets (`output.brson` / `output.json` / `output.yaml`) from MirageX unit virtual objects and embedded ResFeedback templates.
+Builds Resonite mirror assets (`output.brson` / `output.json` / `output.yaml`) from MirageX unit virtual objects and the core / frame parts in `assets/` (Resonite `.brson`).
 
 ## Install
 
@@ -17,6 +17,9 @@ import {
   attachCore,
   attachSimpleFrame,
   attachInstallFrame,
+  readFeedback,
+  readFeedbackIfExists,
+  writeFeedback,
 } from "@mirage-x/mirror";
 ```
 
@@ -39,13 +42,14 @@ Resonite で編集したオブジェクトを公開フォルダに保存し、�
 pnpm --filter @mirage-x/mirror feedback
 # 内訳:
 #   feedback:fetch
-#   feedback:attach:core              → src/core/ResFeedback.json
-#   feedback:attach:frame:simple      → src/frame/simpleFrame/ResFeedback.json
-#   feedback:attach:frame:install     → src/frame/installFrame/ResFeedback.json
+#   feedback:attach:core              → assets/core/ResFeedback.brson
+#   feedback:attach:frame:simple      → assets/frame/simpleFrame/ResFeedback.brson
+#   feedback:attach:frame:install     → assets/frame/installFrame/ResFeedback.brson
 ```
 
 - staging: `scripts/feedback/ResFeedbackOriginal.json`（gitignore）
 - frame は `Static.FrameCode` が一致するときだけ更新（`Simple` / `InstalledAvatar`）
 - 差分なしなら yaml 比較でスキップ
+- 部品は実行時に `assets/` から読むので、取り込んだあと mirror を再ビルドする必要はありません（空の Unit の雛形は `assets/unit/emptyFeedback.brson`）
 
 Unit 用 feedback はアプリ側（例: `examples/basic` の `feedback:unit`）を使います。

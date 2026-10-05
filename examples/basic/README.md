@@ -17,7 +17,7 @@ pnpm build
 pnpm --filter @mirage-x/example-basic build:mirror
 ```
 
-Writes `output/output.brson` and `output/version.json`. Re-run after changing Units or their `ResFeedback.json`.
+Writes `output/output.brson` and `output/version.json`. Re-run after changing Units or their `ResFeedback.brson`.
 
 ## Start the server
 
@@ -53,7 +53,7 @@ const anchorRef = useMirrorRef();
 
 See `@mirage-x/core` [docs/reference-prop.md](../../packages/core/docs/reference-prop.md) for the wire format.
 
-## Unit feedback (Resonite → ResFeedback.json)
+## Unit feedback (Resonite → ResFeedback.brson)
 
 Edit units in Resonite (materials, layout, etc.), save the object into a public inventory **folder**, then pull that folder into the repo:
 
@@ -72,4 +72,4 @@ pnpm --filter @mirage-x/example-basic feedback:unit -- "Demo/SlotHost"
 pnpm --filter @mirage-x/example-basic build:mirror
 ```
 
-Staging files land in `src/dev/resFeedback/` (`ResFeedbackOriginal.json`). Per-unit outputs are `src/unit/<Package>/<Unit>/ResFeedback.json` (+ `.yaml` / `Meta` when changed).
+Staging files land in `src/dev/resFeedback/` (`ResFeedbackOriginal.json`). Per-unit outputs are `src/unit/<Package>/<Unit>/ResFeedback.brson` (+ `.yaml` / `Meta` when changed). Each unit's `mirror.ts` reads it with `readFeedbackIfExists(new URL("./ResFeedback.brson", import.meta.url))`; a unit without one starts from the empty template.

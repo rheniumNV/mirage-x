@@ -10,20 +10,27 @@ import {
   dynamicReferenceVariable,
   dynamicVariableSpace,
 } from "@mirage-x/virtual-object";
-import { emptyFeedback } from "./emptyFeedback.js";
+import { assetPath } from "../assets.js";
+import { readFeedback } from "../feedback/feedbackFile.js";
 
 export const generateMirrorUnitFromFeedback = <C extends DetailBase>({
   config,
   rawFeedback,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  rawFeedback: any;
+  /**
+   * The unit's feedback (`readFeedbackIfExists(...)`). When it is missing or
+   * not a Resonite object, the empty unit template is used.
+   */
+  rawFeedback?: unknown;
   config: UnitConfig<C>;
 }): VirtualContext => {
+  const isObjectContext = (value: unknown): value is ObjectContext =>
+    typeof (value as { VersionNumber?: unknown } | null | undefined)
+      ?.VersionNumber === "string";
   const result = VC.generate(
-    typeof rawFeedback["VersionNumber"] === "string"
-      ? (rawFeedback as ObjectContext)
-      : emptyFeedback,
+    isObjectContext(rawFeedback)
+      ? rawFeedback
+      : readFeedback(assetPath("unit/emptyFeedback.brson")),
   );
   if (result.status !== "SUCCESS") {
     throw new Error(`${result.code} ${result.reason}`);
