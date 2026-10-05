@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # pnpm comes from package.json "packageManager" via corepack.
+      # The corepack bundled with Node 22 is too old to fetch pnpm 12.
+      - name: Enable pnpm
+        run: |
+          npm install -g corepack@latest
+          corepack enable pnpm
+          pnpm --version
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build
+
+      # Runs after build: examples type-check against the packages' dist types.
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build example mirror (output.brson)
+        run: pnpm --filter @mirage-x/example-basic build:mirror
+
+      - name: Check example output
+        run: test -s examples/basic/output/output.brson
