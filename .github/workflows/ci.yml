@@ -38,8 +38,9 @@ jobs:
       - name: Typecheck
         run: pnpm -r typecheck
 
+      # Packages are already built above, so skip the build in `pnpm test`.
       - name: Test
-        run: pnpm test
+        run: pnpm -r --if-present test
 
       - name: Build example mirror (output.brson)
         run: pnpm --filter @mirage-x/example-basic build:mirror
