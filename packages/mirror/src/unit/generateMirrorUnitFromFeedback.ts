@@ -122,6 +122,7 @@ export const generateMirrorUnitFromFeedback = <C extends DetailBase>({
     if (
       slot !== feedbackSlotMain &&
       slot.name.data.data !== "DV/Props" &&
+      slot.name.data.data !== "DV/Refs" &&
       slot.name.data.data !== "DV/Static"
     ) {
       slot.setParent(slotRef);
