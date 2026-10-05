@@ -9,7 +9,11 @@ import { LogicManager } from "./logicManager.js";
 type N2mEvent = {
   type: "init";
   data: {
-    eventType: "tree" | "sync";
+    /**
+     * Only "sync" is supported. Older clients send it explicitly; it may be
+     * omitted. Any other value (e.g. the removed "tree" mode) is rejected.
+     */
+    eventType?: string;
     version: string;
     ownerId: string;
     lang: string;
@@ -22,7 +26,6 @@ export class Connection {
   ws: WebSocket;
   ownerIp: string;
   logicManager: LogicManager | undefined;
-  functionMap = new Map<string, (...args: unknown[]) => unknown>();
   version: string;
   serverId: string;
   authUrl: string;
@@ -67,96 +70,67 @@ export class Connection {
 
         switch (data.type) {
           case "init": {
-            const eventType = data.data.eventType;
+            const eventType = data.data.eventType ?? "sync";
+            if (eventType !== "sync") {
+              console.warn("unsupported eventType", eventType);
+              this.ws.close();
+              return;
+            }
 
-            const versionEvent = {
-              type: "version",
-              data: { version: this.version },
-            };
             this.ws.send(
-              eventType === "sync"
-                ? json2emap(versionEvent)
-                : JSON.stringify(versionEvent),
+              json2emap({ type: "version", data: { version: this.version } }),
+            );
+            this.ws.send(
+              json2emap({
+                type: "initialData",
+                data: {
+                  id: this.id,
+                  version: this.version,
+                  serverId: init.serverId,
+                },
+              }),
             );
 
-            const initialData = {
-              type: "initialData",
-              data: {
-                id: this.id,
-                version: this.version,
-                serverId: init.serverId,
-              },
-            };
-            this.ws.send(
-              eventType === "sync"
-                ? json2emap(initialData)
-                : JSON.stringify(initialData),
-            );
-
-            if (this.version !== data.data.version && eventType !== "tree") {
+            if (this.version !== data.data.version) {
               this.ws.close();
               console.info("version mismatch", this.version, data.data.version);
               return;
             }
 
-            switch (eventType) {
-              case "tree":
-                this.logicManager = new LogicManager(init.app, init.logger, {
-                  connectionId: this.id,
-                  ownerId: data.data.ownerId,
-                  lang: data.data.lang,
-                  authUrl: this.authUrl,
-                  platformApiUrl: init.platformApiUrl,
-                  defaultAuthenticationToken: init.defaultAuthenticationToken,
-                });
-                this.logicManager.syncTreeCallback = () => {
-                  if (this.logicManager) {
-                    const rendered = this.logicManager.render();
-                    this.functionMap = rendered.functionMap;
-                    this.ws.send(
-                      JSON.stringify({ type: "update", data: rendered.tree }),
-                    );
-                    addEventCount();
-                  }
-                };
-                break;
-              case "sync":
-                if (init.eventCountSolver) {
-                  this.eventSendInterval = setInterval(() => {
-                    if (this.events.length > 0 && init.eventCountSolver) {
-                      const count = init.eventCountSolver(this.events.length);
-                      for (let i = 0; i < count; i++) {
-                        if (this.events.length > 0) {
-                          const [sendEvent, ...rest] = this.events;
-                          this.events = rest;
-                          if (sendEvent) {
-                            this.ws.send(
-                              json2emap({ type: "sync", data: sendEvent }),
-                            );
-                          }
-                        }
+            if (init.eventCountSolver) {
+              this.eventSendInterval = setInterval(() => {
+                if (this.events.length > 0 && init.eventCountSolver) {
+                  const count = init.eventCountSolver(this.events.length);
+                  for (let i = 0; i < count; i++) {
+                    if (this.events.length > 0) {
+                      const [sendEvent, ...rest] = this.events;
+                      this.events = rest;
+                      if (sendEvent) {
+                        this.ws.send(
+                          json2emap({ type: "sync", data: sendEvent }),
+                        );
                       }
                     }
-                  }, 10);
-                }
-                this.logicManager = new LogicManager(init.app, init.logger, {
-                  connectionId: this.id,
-                  ownerId: data.data.ownerId,
-                  lang: data.data.lang,
-                  authUrl: this.authUrl,
-                  platformApiUrl: init.platformApiUrl,
-                  defaultAuthenticationToken: init.defaultAuthenticationToken,
-                });
-                this.logicManager.syncEventCallback = (event) => {
-                  if (init.eventCountSolver) {
-                    this.events.push(event);
-                  } else {
-                    this.ws.send(json2emap({ type: "sync", data: event }));
                   }
-                  addEventCount();
-                };
-                break;
+                }
+              }, 10);
             }
+            this.logicManager = new LogicManager(init.app, init.logger, {
+              connectionId: this.id,
+              ownerId: data.data.ownerId,
+              lang: data.data.lang,
+              authUrl: this.authUrl,
+              platformApiUrl: init.platformApiUrl,
+              defaultAuthenticationToken: init.defaultAuthenticationToken,
+            });
+            this.logicManager.syncEventCallback = (event) => {
+              if (init.eventCountSolver) {
+                this.events.push(event);
+              } else {
+                this.ws.send(json2emap({ type: "sync", data: event }));
+              }
+              addEventCount();
+            };
             break;
           }
           default:

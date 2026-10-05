@@ -26,5 +26,6 @@ See [docs/reference-prop.md](docs/reference-prop.md).
 ## Notes
 
 - ESM only (`"type": "module"`).
+- Only the `sync` protocol is supported. The client's `init` may send `eventType: "sync"` or omit it; any other value (the removed `tree` mode) is rejected and the socket is closed.
 - No dependency on `@uni-pocket/*`; `Logger` lives in this package.
 - Unit/res mirror tooling, client attach scripts, and web preview from UniPocket MirageX are intentionally omitted.

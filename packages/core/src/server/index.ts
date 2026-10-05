@@ -271,7 +271,6 @@ export class MirageXServer {
     }
 
     const func = connection.logicManager?.syncFunctionMap.get(funcId);
-    console.debug(funcId, func, connection.functionMap);
     if (!func) {
       console.log("function not found");
       res.status(404).send("function not found");
