@@ -12,8 +12,16 @@ pnpm add @mirage-x/core
 
 | Entry | Contents |
 | --- | --- |
-| `@mirage-x/core` | App APIs: `generateMain`, `UnitProp`, `generateUnitConfig`, `FunctionEnv`, `useBoundCallback`, `noop`, `useMainRootContext`, `Logger`, `version` |
+| `@mirage-x/core` | App APIs: `generateMain`, `UnitProp`, `UnitRef`, `generateUnitConfig`, `FunctionEnv`, `useBoundCallback`, `useMirrorRef`, `noop`, `useMainRootContext`, `Logger`, `version` |
 | `@mirage-x/core/server` | `MirageXServer` (+ config types) |
+
+## Slot references
+
+- Every Unit: `rootSlotRef` → wire `option: { refType: "RootSlot" }`
+- `refsConfig` + `UnitRef.Slot()` → `DV/Refs.*` and wire `option: { refType: "Slot", refKey }`
+- Consumer: `UnitProp.Slot()` → `Props.*` DRV
+
+See [docs/reference-prop.md](docs/reference-prop.md).
 
 ## Notes
 

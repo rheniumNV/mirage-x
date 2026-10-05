@@ -4,7 +4,9 @@
   "description": "MirageX React runtime for Resonite UIX apps",
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "docs",
+    "README.md"
   ],
   "exports": {
     ".": {

@@ -401,3 +401,5 @@ export const EnumSidedness = (
   enumKeys: sidednessKey,
   enumType: "FrooxEngine.Sidedness",
 });
+
+export { Slot } from "./unitPropSlot.js";

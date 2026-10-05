@@ -1,6 +1,9 @@
 import type { FunctionEnv } from "./interactionEvent.js";
+import type { MirrorRef } from "./mirrorRef.js";
 
 export type DvMode = "Field" | "Variable";
+
+export type RefType = "RootSlot" | "Slot";
 
 type Common = {
   resDVType: string;
@@ -99,6 +102,13 @@ export type Long = Common & {
   mirror: number;
 };
 
+export type Reference = Common & {
+  type: "Reference";
+  main: MirrorRef | null;
+  mirror: string;
+  refType: RefType;
+};
+
 export type Base =
   | Boolean
   | Float
@@ -113,4 +123,5 @@ export type Base =
   | Int
   | Long
   | Uri
-  | Enum<string>;
+  | Enum<string>
+  | Reference;
