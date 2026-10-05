@@ -14,6 +14,9 @@ import {
   generateInstallFrame,
   fetchFeedback,
   attachUnits,
+  attachCore,
+  attachSimpleFrame,
+  attachInstallFrame,
 } from "@mirage-x/mirror";
 ```
 
@@ -25,17 +28,24 @@ import {
 
 `build` is the renamed UniPocket MirageX `res()` pipeline entrypoint.
 
-## Feedback
+## Feedback（core / frame）
 
-Pull a Resonite inventory folder object and slice unit packages into per-unit `ResFeedback.json`:
+Resonite で編集したオブジェクトを公開フォルダに保存し、その `resrec:///...` を取り込みます。
 
-```ts
-await fetchFeedback({ link: process.env.FEEDBACK_LINK!, outputPath: feedbackDir });
-attachUnits({
-  feedbackDir,
-  unitsRoot,
-  matchPattern: "PrimitiveUix/.+",
-});
+1. `.env.example` を `.env` にコピーし `FEEDBACK_LINK` を設定
+2. パッケージ直下で:
+
+```bash
+pnpm --filter @mirage-x/mirror feedback
+# 内訳:
+#   feedback:fetch
+#   feedback:attach:core              → src/core/ResFeedback.json
+#   feedback:attach:frame:simple      → src/frame/simpleFrame/ResFeedback.json
+#   feedback:attach:frame:install     → src/frame/installFrame/ResFeedback.json
 ```
 
-See `examples/basic` for a full CLI wiring.
+- staging: `scripts/feedback/ResFeedbackOriginal.json`（gitignore）
+- frame は `Static.FrameCode` が一致するときだけ更新（`Simple` / `InstalledAvatar`）
+- 差分なしなら yaml 比較でスキップ
+
+Unit 用 feedback はアプリ側（例: `examples/basic` の `feedback:unit`）を使います。

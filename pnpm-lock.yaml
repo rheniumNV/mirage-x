@@ -129,6 +129,9 @@ importers:
       '@types/uuid':
         specifier: ^10.0.0
         version: 10.0.0
+      tsx:
+        specifier: ^4.19.4
+        version: 4.23.12
 
   packages/virtual-object: {}
 
