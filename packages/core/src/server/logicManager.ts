@@ -1,6 +1,6 @@
 import axios from "axios";
 import { jwtVerify, importSPKI } from "jose";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "node:crypto";
 import type { ReactElement } from "react";
 import type { Logger } from "../logger/index.js";
 import type {
@@ -254,7 +254,7 @@ export class LogicManager {
         .map(([key, prop]) => {
           switch (prop.type) {
             case "Function": {
-              const id = uuidv4();
+              const id = randomUUID();
               functionMap.set(
                 id,
                 prop.value as (...args: unknown[]) => unknown,

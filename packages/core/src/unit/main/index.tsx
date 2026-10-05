@@ -6,8 +6,14 @@ import {
   useRef,
   type ReactNode,
 } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "node:crypto";
 import { useMainRootContext } from "../../main/index.js";
+import {
+  isMirrorRef,
+  useMirrorRefSnapshot,
+  type MirrorRef,
+  type MirrorRefBindMeta,
+} from "../../common/useMirrorRef.js";
 import {
   type DetailBase,
   type UnitConfig,
@@ -16,7 +22,7 @@ import {
 
 export const UnitContext = createContext<{ id: string }>({ id: "root" });
 
-const useUnitId = () => useMemo(() => uuidv4(), []);
+const useUnitId = () => useMemo(() => randomUUID(), []);
 
 const solveProp = <C extends DetailBase>(
   propConfig: UnitConfig<C>["syncPropConfigList"][number],
@@ -46,6 +52,22 @@ const solveProp = <C extends DetailBase>(
             : value,
         option: { enum: propConfig.enumType },
       };
+    case "Reference": {
+      if (isMirrorRef(value)) {
+        return {
+          key: propConfig.name,
+          type: "Reference",
+          value: value.getUnitId(),
+          option: value.getOption(),
+        };
+      }
+      return {
+        key: propConfig.name,
+        type: "Reference",
+        value: typeof value === "string" ? value : "",
+        option: { refType: "RootSlot" },
+      };
+    }
     default:
       return {
         key: propConfig.name,
@@ -67,6 +89,12 @@ const useSyncProp = <C extends DetailBase>(
   const isFirstTimeRef = useRef(true);
   const prevValueRef = useRef<unknown>(defaultValue);
 
+  const mirrorRef =
+    propConfig.type === "Reference" ? (value as MirrorRef | null) : null;
+  const referenceSnapshot = useMirrorRefSnapshot(mirrorRef);
+  const resolvedValue =
+    propConfig.type === "Reference" ? referenceSnapshot : value;
+
   useEffect(() => {
     if (!eventEmitter || !functionMap) {
       return;
@@ -74,24 +102,37 @@ const useSyncProp = <C extends DetailBase>(
 
     if (isFirstTimeRef.current) {
       isFirstTimeRef.current = false;
+      const unboundReference =
+        propConfig.type === "Reference" &&
+        (resolvedValue === "" ||
+          (typeof resolvedValue === "string" &&
+            resolvedValue.startsWith("|")));
       if (
-        value === defaultValue ||
-        (Array.isArray(value) && `${value}` === `${defaultValue}`)
+        unboundReference ||
+        resolvedValue === defaultValue ||
+        (Array.isArray(resolvedValue) &&
+          `${resolvedValue}` === `${defaultValue}`)
       ) {
         return;
       }
     }
 
-    if (Array.isArray(value) && `${value}` === `${prevValueRef.current}`) {
+    if (
+      Array.isArray(resolvedValue) &&
+      `${resolvedValue}` === `${prevValueRef.current}`
+    ) {
       return;
     }
-    prevValueRef.current = value;
+    if (resolvedValue === prevValueRef.current) {
+      return;
+    }
+    prevValueRef.current = resolvedValue;
 
     const event = solveProp(propConfig, value, (func) => {
       if (functionIdRef.current) {
         functionMap.delete(functionIdRef.current);
       }
-      functionIdRef.current = uuidv4();
+      functionIdRef.current = randomUUID();
       functionMap.set(functionIdRef.current, func);
       return functionIdRef.current;
     });
@@ -103,7 +144,38 @@ const useSyncProp = <C extends DetailBase>(
         prop: event,
       },
     });
-  }, [defaultValue, eventEmitter, functionMap, propConfig, unitId, value]);
+  }, [
+    defaultValue,
+    eventEmitter,
+    functionMap,
+    propConfig,
+    resolvedValue,
+    unitId,
+    value,
+  ]);
+};
+
+const useBindMirrorRef = (
+  unitId: string,
+  handle: MirrorRef | null | undefined,
+  meta: MirrorRefBindMeta,
+) => {
+  const refType = meta.refType;
+  const refKey = meta.refType === "Slot" ? meta.refKey : "";
+
+  useEffect(() => {
+    if (!isMirrorRef(handle)) {
+      return;
+    }
+    const bindMeta: MirrorRefBindMeta =
+      refType === "RootSlot"
+        ? { refType: "RootSlot" }
+        : { refType: "Slot", refKey };
+    handle.bind(unitId, bindMeta);
+    return () => {
+      handle.clearIf(unitId);
+    };
+  }, [handle, refKey, refType, unitId]);
 };
 
 const GeneralUnit = ({
@@ -138,6 +210,8 @@ const GeneralUnit = ({
   return <UnitContext.Provider value={{ id }}>{children}</UnitContext.Provider>;
 };
 
+const ROOT_SLOT_META: MirrorRefBindMeta = { refType: "RootSlot" };
+
 export const generateMain = <C extends DetailBase>(config: UnitConfig<C>) => {
   const Comp = (rawProps: getMainProps<C>) => {
     const unitId = useUnitId();
@@ -147,11 +221,29 @@ export const generateMain = <C extends DetailBase>(config: UnitConfig<C>) => {
       // eslint-disable-next-line react-hooks/rules-of-hooks
       useSyncProp(
         unitId,
-        rawProps[propConfig.name] === undefined
+        rawProps[propConfig.name as keyof typeof rawProps] === undefined
           ? config.defaultProps[propConfig.name]
-          : rawProps[propConfig.name],
+          : rawProps[propConfig.name as keyof typeof rawProps],
         propConfig,
         config.defaultProps[propConfig.name],
+      );
+    });
+
+    // Every Unit can export its root Slot.
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useBindMirrorRef(
+      unitId,
+      (rawProps as { rootSlotRef?: MirrorRef | null }).rootSlotRef,
+      ROOT_SLOT_META,
+    );
+
+    config.refsConfigList.forEach((refConfig) => {
+      const propName = `${refConfig.name}Ref` as keyof typeof rawProps;
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      useBindMirrorRef(
+        unitId,
+        rawProps[propName] as MirrorRef | null | undefined,
+        { refType: "Slot", refKey: refConfig.name },
       );
     });
 

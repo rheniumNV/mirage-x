@@ -6,6 +6,12 @@ export { generateMirrorUnitFromFeedback } from "./unit/generateMirrorUnitFromFee
 export {
   fetchFeedback,
   attachUnits,
+  attachCore,
+  attachSimpleFrame,
+  attachInstallFrame,
   convertRawFeedback,
 } from "./feedback/index.js";
-export type { AttachUnitsOptions } from "./feedback/index.js";
+export type {
+  AttachUnitsOptions,
+  AttachFeedbackPaths,
+} from "./feedback/index.js";

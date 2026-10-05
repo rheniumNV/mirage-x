@@ -42,7 +42,7 @@ export class VirtualComponent {
     initialContext: InitialContext,
     data: ObjectComponent,
   ): VirtualComponent {
-    //TODO: ワーニングを�EすよぁE��する
+    //TODO: ワーニングを出すようにする
     const type = initialContext.types[data.Type] ?? "";
     const component = new VirtualComponent(initialContext.context, {
       type: type,

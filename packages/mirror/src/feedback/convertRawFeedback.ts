@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "node:crypto";
 
 type Obj =
   | {
@@ -118,7 +118,7 @@ const convertRandomId = (map: Map<string, string>) => (value: unknown) => {
     value.match(/^[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$/)
   ) {
     if (!map.has(value)) {
-      map.set(value, uuidv4());
+      map.set(value, randomUUID());
     }
     return map.get(value);
   }

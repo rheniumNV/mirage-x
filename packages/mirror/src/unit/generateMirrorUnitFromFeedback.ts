@@ -122,6 +122,7 @@ export const generateMirrorUnitFromFeedback = <C extends DetailBase>({
     if (
       slot !== feedbackSlotMain &&
       slot.name.data.data !== "DV/Props" &&
+      slot.name.data.data !== "DV/Refs" &&
       slot.name.data.data !== "DV/Static"
     ) {
       slot.setParent(slotRef);
@@ -175,7 +176,10 @@ export const generateMirrorUnitFromFeedback = <C extends DetailBase>({
   };
 
   const slotDvProps = slotRef.createChild({ name: "DV/Props" });
-  const feedbackProps = feedbackSlotDvProps?.components
+  const feedbackSlotDvRefs = feedbackSlotRef.children.find(
+    (slot) => slot.name.data.data === "DV/Refs",
+  );
+  const feedbackFieldProps = feedbackSlotDvProps?.components
     .filter((component) =>
       component.type.startsWith("[FrooxEngine]FrooxEngine.DynamicField<"),
     )
@@ -194,8 +198,63 @@ export const generateMirrorUnitFromFeedback = <C extends DetailBase>({
       },
       {} as { [key: string]: unknown },
     );
+  const feedbackReferenceProps = feedbackSlotDvProps?.components
+    .filter((component) =>
+      component.type.startsWith(
+        "[FrooxEngine]FrooxEngine.DynamicReferenceVariable<",
+      ),
+    )
+    .reduce(
+      (acc, component) => {
+        const variableName = component.data.VariableName?.asPrimitive() as
+          | string
+          | null;
+        const value = component.data.Reference?.data;
+        return {
+          ...acc,
+          ...(variableName ? { [variableName]: value } : {}),
+        };
+      },
+      {} as { [key: string]: unknown },
+    );
+  const feedbackNamedRefs = feedbackSlotDvRefs?.components
+    .filter((component) =>
+      component.type.startsWith(
+        "[FrooxEngine]FrooxEngine.DynamicReferenceVariable<",
+      ),
+    )
+    .reduce(
+      (acc, component) => {
+        const variableName = component.data.VariableName?.asPrimitive() as
+          | string
+          | null;
+        const value = component.data.Reference?.data;
+        return {
+          ...acc,
+          ...(variableName ? { [variableName]: value } : {}),
+        };
+      },
+      {} as { [key: string]: unknown },
+    );
+
   config.syncPropConfigList.forEach((propConfig) => {
-    const feedbackValue = feedbackProps?.[`Props.${propConfig.name}`];
+    if (propConfig.type === "Reference") {
+      const feedbackValue =
+        feedbackReferenceProps?.[`Props.${propConfig.name}`] ??
+        feedbackFieldProps?.[`Props.${propConfig.name}`];
+      const dvRef = slotDvProps.createComponent(
+        dynamicReferenceVariable({
+          type: "[FrooxEngine]FrooxEngine.Slot",
+          variableName: `Props.${propConfig.name}`,
+        }),
+      );
+      if (dvRef.data.Reference && feedbackValue) {
+        dvRef.data.Reference.data = feedbackValue as never;
+      }
+      return;
+    }
+
+    const feedbackValue = feedbackFieldProps?.[`Props.${propConfig.name}`];
     const dvField = slotDvProps.createComponent(
       dynamicField({
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -211,6 +270,23 @@ export const generateMirrorUnitFromFeedback = <C extends DetailBase>({
       dvField.data.TargetReference.data = feedbackValue as FieldDataPrimitive;
     }
   });
+
+  if (config.refsConfigList.length > 0) {
+    const slotDvRefs = slotRef.createChild({ name: "DV/Refs" });
+    for (const refConfig of config.refsConfigList) {
+      const variableName = `Refs.${refConfig.name}`;
+      const feedbackValue = feedbackNamedRefs?.[variableName];
+      const dvRef = slotDvRefs.createComponent(
+        dynamicReferenceVariable({
+          type: "[FrooxEngine]FrooxEngine.Slot",
+          variableName,
+        }),
+      );
+      if (dvRef.data.Reference && feedbackValue) {
+        dvRef.data.Reference.data = feedbackValue as never;
+      }
+    }
+  }
 
   return context;
 };

@@ -15,18 +15,23 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "feedback": "pnpm feedback:fetch && pnpm feedback:attach",
+    "feedback:fetch": "tsx --env-file=.env scripts/feedback/fetch.ts",
+    "feedback:attach": "pnpm feedback:attach:core && pnpm feedback:attach:frame:simple && pnpm feedback:attach:frame:install",
+    "feedback:attach:core": "tsx scripts/feedback/attachCore.ts",
+    "feedback:attach:frame:simple": "tsx scripts/feedback/attachSimpleFrame.ts",
+    "feedback:attach:frame:install": "tsx scripts/feedback/attachInstallFrame.ts"
   },
   "dependencies": {
     "@mirage-x/core": "workspace:^",
     "@mirage-x/virtual-object": "workspace:^",
     "axios": "^1.7.7",
     "brson.js": "^1.0.5",
-    "uuid": "^10.0.0",
     "yaml": "^2.5.1"
   },
   "devDependencies": {
-    "@types/uuid": "^10.0.0"
+    "tsx": "^4.19.4"
   },
   "publishConfig": {
     "access": "public"
