@@ -10,17 +10,24 @@ import {
 
 export const App = () => {
   const rootSlotRef = useMirrorRef();
+  const anchorRef = useMirrorRef();
 
   return (
     <>
       <SlotHost
         name="RefDemo.Host"
         rootSlotRef={rootSlotRef}
+        anchorRef={anchorRef}
         position={[0, -0.25, 0]}
       />
       <SlotTarget
-        name="RefDemo.Target"
+        name="RefDemo.Target.RootSlot"
         target={rootSlotRef}
+        position={[0.25, 0, 0]}
+      />
+      <SlotTarget
+        name="RefDemo.Target.AnchorSlot"
+        target={anchorRef}
         position={[0.25, 0, 0]}
       />
       <Canvas size={[1000, 300]}>
