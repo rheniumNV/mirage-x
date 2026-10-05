@@ -31,6 +31,7 @@ export const placeCore = (
   const oldFrameRoot = referenceOf(core.root(), "Static.FrameRoot");
   const [newCore] = importSlots(frame, parent, [core.root()], {
     allowed: oldFrameRoot ? [oldFrameRoot] : [],
+    label: "The core",
   }).slots();
   if (!newCore) {
     throw new Error("Failed to import the core into the frame");
@@ -41,7 +42,9 @@ export const placeCore = (
   }
   frame.removeSlot(placeholder);
 
-  importSlots(frame, requireChild(frameRoot, "DV"), [env.root()]);
+  importSlots(frame, requireChild(frameRoot, "DV"), [env.root()], {
+    label: "ENV (frame)",
+  });
 
   setReference(frameRoot, "Static.AppRoot", newCore.id());
   setReference(newCore, "Static.FrameRoot", frameRoot.id());

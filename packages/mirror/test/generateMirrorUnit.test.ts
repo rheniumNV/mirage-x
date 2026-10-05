@@ -6,6 +6,7 @@ import { UnitProp, UnitRef, generateUnitConfig } from "@mirage-x/core";
 
 import {
   SLOT_REFERENCE_VARIABLE,
+  addSlotReferenceVariable,
   referenceOf,
   stringOf,
 } from "../src/frdt/util.js";
@@ -147,6 +148,23 @@ describe("generateMirrorUnitFromFeedback", () => {
           rawFeedback: roundTrip(first),
         }),
       /Props\.size points outside the copied slots/,
+    );
+  });
+
+  it("fails, naming the unit, when the feedback refers outside what is copied", () => {
+    const first = generateMirrorUnitFromFeedback({ config });
+    // Something in Main pointing at the unit's Ref slot, which is not copied.
+    const main = slotsNamed(first, "Main")[0]!;
+    const ref = slotsNamed(first, "Ref")[0]!;
+    addSlotReferenceVariable(first, main, "Test.OutsideRef", ref.id());
+
+    assert.throws(
+      () =>
+        generateMirrorUnitFromFeedback({
+          config,
+          rawFeedback: roundTrip(first),
+        }),
+      /Test\/Host: the feedback refers to ids that were not copied/,
     );
   });
 });

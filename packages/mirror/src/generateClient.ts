@@ -8,6 +8,8 @@ import {
   importSlots,
   requireChild,
   str,
+  type BoolValue,
+  type StringValue,
 } from "./frdt/util.js";
 
 /** Units by category: `{ [category]: { [name]: unit } }`. */
@@ -61,7 +63,7 @@ export const generateClient = ({
     core.versionNumber(),
     core.featureFlags(),
   );
-  const envVariables: Array<[string, ReturnType<typeof str>]> = [
+  const envVariables: Array<[string, StringValue | BoolValue]> = [
     ["Env.Host.CVPath", str(hostCVPath)],
     ["Env.Host.Fallback", str(fallbackHost)],
     ["Env.UseSSL.CVPath", str(useSSLCVPath)],
@@ -77,7 +79,7 @@ export const generateClient = ({
     ["ENV.ResetOnSave", bool(resetOnSave)],
   ];
   for (const [name, value] of envVariables) {
-    addValueVariable(env, env.root(), name, value as never);
+    addValueVariable(env, env.root(), name, value);
   }
 
   const main = requireChild(core.root(), "Main");
@@ -85,16 +87,16 @@ export const generateClient = ({
   for (const [category, categoryUnits] of Object.entries(units)) {
     const categorySlot = core.addSlot(packageSlot, category);
     for (const [name, unit] of Object.entries(categoryUnits)) {
-      try {
-        importSlots(core, categorySlot, [unit.root()]);
-      } catch (e) {
-        throw new Error(`Failed to add unit ${category}/${name}`, { cause: e });
-      }
+      importSlots(core, categorySlot, [unit.root()], {
+        label: `Unit ${category}/${name} (${unit.root().name()})`,
+      });
     }
   }
 
   // ENV goes to Main/DV of the core as well as to the frame.
-  importSlots(core, requireChild(main, "DV"), [env.root()]);
+  importSlots(core, requireChild(main, "DV"), [env.root()], {
+    label: "ENV (core)",
+  });
 
   return generateFrame({ appCode, core, env });
 };

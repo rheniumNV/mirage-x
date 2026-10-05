@@ -68,12 +68,19 @@ export const generateMirrorUnitFromFeedback = <C extends DetailBase>({
 
   // Main first, then the feedback's other children except the DV slots that
   // are rebuilt below.
-  const imported = importSlots(unit, ref, [
-    feedback.slotById(mainId),
-    ...feedbackRef
-      .children()
-      .filter((slot) => slot.id() !== mainId && !NOT_COPIED.has(slot.name())),
-  ]);
+  const imported = importSlots(
+    unit,
+    ref,
+    [
+      feedback.slotById(mainId),
+      ...feedbackRef
+        .children()
+        .filter(
+          (slot) => slot.id() !== mainId && !NOT_COPIED.has(slot.name()),
+        ),
+    ],
+    { label: `${config.code}: the feedback` },
+  );
   const copied = (sourceId: string, what: string): string => {
     const id = imported.newId(sourceId);
     if (!id) {

@@ -16,8 +16,11 @@ export const SLOT_REFERENCE_VARIABLE =
   "[FrooxEngine]FrooxEngine.DynamicReferenceVariable<[FrooxEngine]FrooxEngine.Slot>";
 const DYNAMIC_VARIABLE_SPACE = "[FrooxEngine]FrooxEngine.DynamicVariableSpace";
 
-export const str = (value: string): Value => ({ kind: "string", value });
-export const bool = (value: boolean): Value => ({ kind: "bool", value });
+export type StringValue = Extract<Value, { kind: "string" }>;
+export type BoolValue = Extract<Value, { kind: "bool" }>;
+
+export const str = (value: string): StringValue => ({ kind: "string", value });
+export const bool = (value: boolean): BoolValue => ({ kind: "bool", value });
 export const int = (value: number): Value => ({ kind: "int", value });
 
 export const stringOf = (value: Value | null | undefined): string | null =>
@@ -114,7 +117,7 @@ export const addValueVariable = (
   doc: Document,
   slot: Slot,
   variableName: string,
-  value: Value & { kind: "string" | "bool" },
+  value: StringValue | BoolValue,
 ) =>
   doc.addComponent(
     slot,
@@ -130,12 +133,17 @@ export const addValueVariable = (
 /**
  * `doc.import` that fails when the copy still refers to ids that were not
  * copied, except for `allowed` ones (references the caller rewrites).
+ * `label` names what is being imported in the error.
  */
 export const importSlots = (
   doc: Document,
   parent: Slot,
   slots: Slot[],
-  { allowed = [], ...options }: ImportOptions & { allowed?: string[] } = {},
+  {
+    allowed = [],
+    label,
+    ...options
+  }: ImportOptions & { allowed?: string[]; label?: string } = {},
 ) => {
   const imported = doc.import(parent, slots, { ...options, unresolved: "keep" });
   const unresolved = imported
@@ -143,7 +151,7 @@ export const importSlots = (
     .filter((id) => !allowed.includes(id));
   if (unresolved.length > 0) {
     throw new Error(
-      `Import under "${parent.name()}" refers to ids that were not copied: ${unresolved.join(", ")}`,
+      `${label ?? `Import under "${parent.name()}"`} refers to ids that were not copied: ${unresolved.join(", ")}`,
     );
   }
   return imported;

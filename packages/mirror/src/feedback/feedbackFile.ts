@@ -16,6 +16,9 @@ export const readFeedbackIfExists = (
 ): Document | undefined =>
   fs.existsSync(file) ? readFeedback(file) : undefined;
 
+const isDocument = (value: Document | ObjectContext): value is Document =>
+  typeof (value as Partial<Document>).writeBrson === "function";
+
 /**
  * Write a feedback part. The feedback import (`attach*`) still produces the
  * JSON form via VirtualObject (#14), so that is accepted too.
@@ -24,9 +27,11 @@ export const writeFeedback = (
   file: FeedbackFile,
   feedback: Document | ObjectContext,
 ) => {
+  // Duck-typed so that a Document from another copy of @frdt/frdt is not
+  // mistaken for JSON.
   fs.writeFileSync(
     file,
-    feedback instanceof Document
+    isDocument(feedback)
       ? feedback.writeBrson()
       : Compress(JSON.stringify(feedback)),
   );
