@@ -3,7 +3,6 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist-test",
-    "composite": false,
     "declaration": false,
     "declarationMap": false,
     "noEmit": false
