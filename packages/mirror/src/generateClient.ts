@@ -1,10 +1,27 @@
-import type { VirtualContext } from "@mirage-x/virtual-object";
-import {
-  VirtualContext as VC,
-  dynamicValueVariable,
-} from "@mirage-x/virtual-object";
+import { Document } from "@frdt/frdt";
+
 import { assetPath } from "./assets.js";
 import { readFeedback } from "./feedback/feedbackFile.js";
+import {
+  addValueVariable,
+  bool,
+  importSlots,
+  requireChild,
+  str,
+} from "./frdt/util.js";
+
+/** Units by category: `{ [category]: { [name]: unit } }`. */
+export type MirrorUnits = {
+  [category: string]: { [name: string]: Document };
+};
+
+export type GenerateFrame = (option: {
+  appCode: string;
+  /** The core with the units and its ENV in place. */
+  core: Document;
+  /** The ENV slot (a separate document) to place in the frame. */
+  env: Document;
+}) => Document;
 
 export const generateClient = ({
   appCode,
@@ -34,162 +51,50 @@ export const generateClient = ({
   };
   developCode?: string;
   resetOnSave: boolean;
-  units: {
-    [key: string]: { [key: string]: VirtualContext };
-  };
-  generateFrame: (option: {
-    appCode: string;
-    core: VirtualContext;
-    generateEnv: () => VirtualContext;
-  }) => VirtualContext;
-}): VirtualContext => {
-  const result = VC.generate(readFeedback(assetPath("core/ResFeedback.brson")));
-  if (result.status === "FAILED") {
-    throw new Error(`${result.code} ${result.reason}`);
-  }
-  const { context: coreContext, warnings: coreContextWarnings } = result.data;
+  units: MirrorUnits;
+  generateFrame: GenerateFrame;
+}): Document => {
+  const core = readFeedback(assetPath("core/ResFeedback.brson"));
 
-  if (coreContextWarnings.length > 0) {
-    console.warn("coreContextWarnings", coreContextWarnings);
+  const env = Document.empty(
+    "ENV",
+    core.versionNumber(),
+    core.featureFlags(),
+  );
+  const envVariables: Array<[string, ReturnType<typeof str>]> = [
+    ["Env.Host.CVPath", str(hostCVPath)],
+    ["Env.Host.Fallback", str(fallbackHost)],
+    ["Env.UseSSL.CVPath", str(useSSLCVPath)],
+    ["Env.CVOwnerID", str(cvOwnerId)],
+    ["Env.UseSSL.Fallback", bool(fallbackUseSSL)],
+    ["Env.Version.Current", str(currentVersion)],
+    ["Env.AppCode", str(appCode)],
+    ["Env._IsCompatibleWithGeneralHub", bool(true)],
+    ["ENV.HostAccessReason.Ja", str(hostAccessReason.ja)],
+    ["ENV.HostAccessReason.En", str(hostAccessReason.en)],
+    ["ENV.HostAccessReason.Ko", str(hostAccessReason.ko)],
+    ["ENV.DEVELOP_CODE", str(developCode ?? "")],
+    ["ENV.ResetOnSave", bool(resetOnSave)],
+  ];
+  for (const [name, value] of envVariables) {
+    addValueVariable(env, env.root(), name, value as never);
   }
 
-  const { context: envContext, warnings: envContextWarnings } =
-    VC.createEmpty();
-  if (envContextWarnings.length > 0) {
-    console.warn("envContextWarnings", envContextWarnings);
-  }
-  envContext.object.name.data.data = "ENV";
-  const slotEnv = envContext.object;
-  slotEnv.createComponent(
-    dynamicValueVariable({
-      typeValue: { type: "string", value: hostCVPath },
-      variableName: "Env.Host.CVPath",
-    }),
-  );
-  slotEnv.createComponent(
-    dynamicValueVariable({
-      typeValue: { type: "string", value: fallbackHost },
-      variableName: "Env.Host.Fallback",
-    }),
-  );
-  slotEnv.createComponent(
-    dynamicValueVariable({
-      typeValue: { type: "string", value: useSSLCVPath },
-      variableName: "Env.UseSSL.CVPath",
-    }),
-  );
-  slotEnv.createComponent(
-    dynamicValueVariable({
-      typeValue: { type: "string", value: cvOwnerId },
-      variableName: "Env.CVOwnerID",
-    }),
-  );
-  slotEnv.createComponent(
-    dynamicValueVariable({
-      typeValue: { type: "bool", value: fallbackUseSSL },
-      variableName: "Env.UseSSL.Fallback",
-    }),
-  );
-  slotEnv.createComponent(
-    dynamicValueVariable({
-      typeValue: { type: "string", value: currentVersion },
-      variableName: "Env.Version.Current",
-    }),
-  );
-  slotEnv.createComponent(
-    dynamicValueVariable({
-      typeValue: { type: "string", value: appCode },
-      variableName: "Env.AppCode",
-    }),
-  );
-  slotEnv.createComponent(
-    dynamicValueVariable({
-      typeValue: { type: "bool", value: true },
-      variableName: "Env._IsCompatibleWithGeneralHub",
-    }),
-  );
-  slotEnv.createComponent(
-    dynamicValueVariable({
-      typeValue: { type: "string", value: hostAccessReason.ja },
-      variableName: "ENV.HostAccessReason.Ja",
-    }),
-  );
-  slotEnv.createComponent(
-    dynamicValueVariable({
-      typeValue: { type: "string", value: hostAccessReason.en },
-      variableName: "ENV.HostAccessReason.En",
-    }),
-  );
-  slotEnv.createComponent(
-    dynamicValueVariable({
-      typeValue: { type: "string", value: hostAccessReason.ko },
-      variableName: "ENV.HostAccessReason.Ko",
-    }),
-  );
-  slotEnv.createComponent(
-    dynamicValueVariable({
-      typeValue: { type: "string", value: developCode ?? "" },
-      variableName: "ENV.DEVELOP_CODE",
-    }),
-  );
-  slotEnv.createComponent(
-    dynamicValueVariable({
-      typeValue: { type: "bool", value: resetOnSave },
-      variableName: "ENV.ResetOnSave",
-    }),
-  );
-
-  const slotPackage = coreContext.object.children
-    .find((child) => child.name.asPrimitive() === "Main")
-    ?.children.find((slot) => slot.name.data.data === "Package");
-  if (!slotPackage) {
-    throw new Error("Package not found");
-  }
-  Object.entries(units).forEach(([key, category]) => {
-    const unitCategory = slotPackage.createChild({ name: key });
-    Object.entries(category).forEach(([, unit]) => {
+  const main = requireChild(core.root(), "Main");
+  const packageSlot = requireChild(main, "Package");
+  for (const [category, categoryUnits] of Object.entries(units)) {
+    const categorySlot = core.addSlot(packageSlot, category);
+    for (const [name, unit] of Object.entries(categoryUnits)) {
       try {
-        unit.object.setParent(unitCategory);
+        importSlots(core, categorySlot, [unit.root()]);
       } catch (e) {
-        console.error("Failed to set parent", category, key);
-        throw e;
+        throw new Error(`Failed to add unit ${category}/${name}`, { cause: e });
       }
-    });
-  });
-
-  const coreMainDVSlot = coreContext.object.children
-    .find((child) => child.name.asPrimitive() === "Main")
-    ?.children.find((child) => child.name.asPrimitive() === "DV");
-  if (!coreMainDVSlot) {
-    throw new Error("Main/DV slot not found");
+    }
   }
 
-  const generateEnv = (): VirtualContext => {
-    const { context: envJson, warnings: envJsonWarnings } = envContext.export();
-    if (envJsonWarnings.length > 0) {
-      console.warn("envJsonWarnings", envJsonWarnings);
-    }
+  // ENV goes to Main/DV of the core as well as to the frame.
+  importSlots(core, requireChild(main, "DV"), [env.root()]);
 
-    const envResult = VC.generate(envJson);
-    if (envResult.status === "FAILED") {
-      throw new Error(`${envResult.code} ${envResult.reason}`);
-    }
-    const { context: duplicatedEnvContext, warnings: envDupWarnings } =
-      envResult.data;
-
-    if (envDupWarnings.length > 0) {
-      console.warn("envContextWarnings", envDupWarnings);
-    }
-    return duplicatedEnvContext;
-  };
-
-  const frameContext = generateFrame({
-    appCode,
-    core: coreContext,
-    generateEnv,
-  });
-
-  envContext.object.setParent(coreMainDVSlot);
-
-  return frameContext;
+  return generateFrame({ appCode, core, env });
 };
