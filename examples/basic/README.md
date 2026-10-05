@@ -39,15 +39,19 @@ Drag `examples/basic/output/output.brson` into a Resonite world. The object will
 
 ```tsx
 const rootSlotRef = useMirrorRef();
-<SlotHost rootSlotRef={rootSlotRef} />
-<SlotTarget parent={rootSlotRef} />
+const anchorRef = useMirrorRef();
+<SlotHost rootSlotRef={rootSlotRef} anchorRef={anchorRef} />
+<SlotTarget target={rootSlotRef} />
+<SlotTarget target={anchorRef} />
 ```
 
 - Every Unit accepts `rootSlotRef` → sync `option: { refType: "RootSlot" }` (unit root / `Static.Ref`)
-- `Demo/SlotHost` also has `refsConfig.anchor` → mirror `DV/Refs.anchor` (named Slot export)
-- `Demo/SlotTarget.parent` is `UnitProp.Slot` → consumer `Props.parent` DRV
+- `Demo/SlotHost` also has `refsConfig.anchor` → `anchorRef` bind prop, mirror `DV/Refs.anchor` (named Slot export), sync `option: { refType: "Slot", refKey: "anchor" }`
+- `Demo/SlotTarget.target` is `UnitProp.Slot` → consumer `Props.target` DRV
 
-After you add the Resonite Flux branches for `Reference` (`RootSlot` / `Slot`+`refKey`), see `@mirage-x/core` [docs/reference-prop.md](../../packages/core/docs/reference-prop.md).
+`Refs.anchor` points at whatever Slot you assign to it in Resonite (saved via unit feedback). If it is unset, the anchor-side `SlotTarget` receives an empty reference.
+
+See `@mirage-x/core` [docs/reference-prop.md](../../packages/core/docs/reference-prop.md) for the wire format.
 
 ## Unit feedback (Resonite → ResFeedback.json)
 
