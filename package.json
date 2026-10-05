@@ -8,7 +8,7 @@
   "scripts": {
     "build": "pnpm -r --filter=./packages/* build",
     "dev": "pnpm --filter @mirage-x/core dev",
-    "typecheck": "pnpm -r typecheck",
+    "typecheck": "pnpm build && pnpm -r typecheck",
     "test": "pnpm -r --if-present test"
   },
   "devDependencies": {

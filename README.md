@@ -27,7 +27,7 @@ Requires Node.js `>=22.13` and [pnpm](https://pnpm.io). The pnpm version is pinn
 ```bash
 pnpm install
 pnpm build
-pnpm typecheck   # packages and examples (run after build)
+pnpm typecheck   # builds packages, then type-checks packages and examples
 pnpm test
 pnpm --filter @mirage-x/example-basic build:mirror
 pnpm --filter @mirage-x/example-basic start

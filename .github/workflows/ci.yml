@@ -34,9 +34,9 @@ jobs:
       - name: Build packages
         run: pnpm build
 
-      # Runs after build: examples type-check against the packages' dist types.
+      # Packages are already built above, so skip the build in `pnpm typecheck`.
       - name: Typecheck
-        run: pnpm typecheck
+        run: pnpm -r typecheck
 
       - name: Test
         run: pnpm test
