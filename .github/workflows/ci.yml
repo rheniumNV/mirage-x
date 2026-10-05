@@ -7,7 +7,8 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Cancel superseded PR runs only; keep every run on master.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -16,22 +17,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      # Installs the pnpm version pinned in package.json (v6.1.0+ supports pnpm 12).
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
-
-      # pnpm comes from package.json "packageManager" via corepack.
-      # The corepack bundled with Node 22 is too old to fetch pnpm 12.
-      - name: Enable pnpm
-        run: |
-          npm install -g corepack@latest
-          corepack enable pnpm
-          pnpm --version
+          cache: pnpm
 
       - name: Install
         run: pnpm install --frozen-lockfile
