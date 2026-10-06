@@ -264,8 +264,8 @@ importers:
   packages/mirror:
     dependencies:
       '@frdt/frdt':
-        specifier: ^0.2.2
-        version: 0.2.2
+        specifier: ^0.2.4
+        version: 0.2.4
       '@mirage-x/core':
         specifier: workspace:*
         version: link:../core
@@ -278,9 +278,6 @@ importers:
       brson.js:
         specifier: ^1.0.5
         version: 1.0.5
-      yaml:
-        specifier: ^2.5.1
-        version: 2.9.0
     devDependencies:
       tsx:
         specifier: ^4.19.4
@@ -455,34 +452,34 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@frdt/binding-darwin-arm64@0.2.2':
-    resolution: {integrity: sha512-rHVpqu97VSJhb5Pk5MuL38b99I1VbC/IFQyrasVg+lj7iy47iiDB7NL43eoOZRHM9qIj8eQKjYanu8o5IGvOUQ==}
+  '@frdt/binding-darwin-arm64@0.2.4':
+    resolution: {integrity: sha512-tJJ/dJHKVYnCsQVDnzsDTKkt13KhkMFbYdh2QkuZtGZkzkwQJLegpU504ovnqJp3noafzj8cREbr/S35zGIqMw==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=23.5.0}
     cpu: [arm64]
     os: [darwin]
 
-  '@frdt/binding-linux-x64-gnu@0.2.2':
-    resolution: {integrity: sha512-yTJA1udhwM2vpxuO07/7zQTIW3QnsvqPQGd4X6l9A4q0UzVzDtUKcm5b3HCn70D+goc6qUVaAy/vUxFX9vKAoA==}
+  '@frdt/binding-linux-x64-gnu@0.2.4':
+    resolution: {integrity: sha512-qYb/utIVgn6HtobSa94idAFGZ5DkNV8eVj3+vrE/nnXH9xAUYMn++86kzdFZr5jfOIsmEH+IFR5+bYvhmpjoTg==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=23.5.0}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@frdt/binding-linux-x64-musl@0.2.2':
-    resolution: {integrity: sha512-B/9l6wkKuMX+mDm3v2k4opBs6kwymh0UaEeyHS/wCKp3QLGIEEq+PtaWi3aOK7o/wYm7G8Gx3qyX5uMbl4os1g==}
+  '@frdt/binding-linux-x64-musl@0.2.4':
+    resolution: {integrity: sha512-6baHzx+YJB1wp7asDiuVHl/d3rTH0iuSkYuMha90Jw9NfXAsHitCVpIbQsx6w/+GDaWNTTGgRbB/MlnO/lfZTw==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=23.5.0}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@frdt/binding-win32-x64-msvc@0.2.2':
-    resolution: {integrity: sha512-JEWTQtz4tVdIXUcGAcAz8ZUO5vGVJlrvcJOVnnekLGwKnwife9xr8/sApQxC9dITD1BHjJqXYQyWfiJZA8t5TQ==}
+  '@frdt/binding-win32-x64-msvc@0.2.4':
+    resolution: {integrity: sha512-tWnamMGbNp241/tACVjS9gYDVSczVYaskbJ7i7hhXzZ7tU4/K2pOsmPRYfxJbmK9f6cqX8FByHA4cqeinYYBDQ==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=23.5.0}
     cpu: [x64]
     os: [win32]
 
-  '@frdt/frdt@0.2.2':
-    resolution: {integrity: sha512-OPzqado7V6WXWQg8Wk8pcIEiXEXOqAPcthOEdT9BjfN3aIivseK1gVgmqL2qVFUbT1YdpsUVKj/kCaFZmbUteQ==}
+  '@frdt/frdt@0.2.4':
+    resolution: {integrity: sha512-11f4aBmfLKFlP8PaxLTeY+8BN0pOxcuPycdQsqMMrzCoQgV1A04srbllWPBpf/JfwrumsxhT1vZx7zc1PUBK4w==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=23.5.0}
 
   '@napi-rs/wasm-runtime@1.2.4':
@@ -951,11 +948,6 @@ packages:
       utf-8-validate:
         optional: true
 
-  yaml@2.9.0:
-    resolution: {integrity: sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA==}
-    engines: {node: '>= 14.6'}
-    hasBin: true
-
 snapshots:
 
   '@emnapi/core@2.0.0-alpha.5':
@@ -1049,28 +1041,28 @@ snapshots:
   '@esbuild/win32-x64@0.28.2':
     optional: true
 
-  '@frdt/binding-darwin-arm64@0.2.2':
+  '@frdt/binding-darwin-arm64@0.2.4':
     optional: true
 
-  '@frdt/binding-linux-x64-gnu@0.2.2':
+  '@frdt/binding-linux-x64-gnu@0.2.4':
     optional: true
 
-  '@frdt/binding-linux-x64-musl@0.2.2':
+  '@frdt/binding-linux-x64-musl@0.2.4':
     optional: true
 
-  '@frdt/binding-win32-x64-msvc@0.2.2':
+  '@frdt/binding-win32-x64-msvc@0.2.4':
     optional: true
 
-  '@frdt/frdt@0.2.2':
+  '@frdt/frdt@0.2.4':
     dependencies:
       '@emnapi/core': 2.0.0-alpha.5
       '@emnapi/runtime': 2.0.0-alpha.5
       '@napi-rs/wasm-runtime': 1.2.4(@emnapi/core@2.0.0-alpha.5)(@emnapi/runtime@2.0.0-alpha.5)
     optionalDependencies:
-      '@frdt/binding-darwin-arm64': 0.2.2
-      '@frdt/binding-linux-x64-gnu': 0.2.2
-      '@frdt/binding-linux-x64-musl': 0.2.2
-      '@frdt/binding-win32-x64-msvc': 0.2.2
+      '@frdt/binding-darwin-arm64': 0.2.4
+      '@frdt/binding-linux-x64-gnu': 0.2.4
+      '@frdt/binding-linux-x64-musl': 0.2.4
+      '@frdt/binding-win32-x64-msvc': 0.2.4
 
   '@napi-rs/wasm-runtime@1.2.4(@emnapi/core@2.0.0-alpha.5)(@emnapi/runtime@2.0.0-alpha.5)':
     dependencies:
@@ -1594,5 +1586,3 @@ snapshots:
   vary@1.1.2: {}
 
   ws@8.21.3: {}
-
-  yaml@2.9.0: {}

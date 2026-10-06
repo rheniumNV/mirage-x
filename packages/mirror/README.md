@@ -1,6 +1,6 @@
 # @mirage-x/mirror
 
-Builds the Resonite mirror (`output.brson`, plus `output.json` / `output.yaml` for now) from MirageX units and the core / frame parts in `assets/` (Resonite `.brson`). Documents are assembled with [`@frdt/frdt`](https://www.npmjs.com/package/@frdt/frdt).
+Builds the Resonite mirror (`output.brson` and `version.json`) from MirageX units and the core / frame parts in `assets/` (Resonite `.brson`). Documents are assembled with [`@frdt/frdt`](https://www.npmjs.com/package/@frdt/frdt).
 
 ## Install
 
@@ -27,7 +27,7 @@ import {
 
 1. Build each unit with `generateMirrorUnitFromFeedback({ config, rawFeedback: readFeedbackIfExists(url) })` (an `@frdt/frdt` `Document`).
 2. Call `build(config, units, generateSimpleFrame | generateInstallFrame)`.
-3. Artifacts are written under `config.outputPath` when the tree changed vs the previous `output.yaml`.
+3. `output.brson` and `version.json` are written under `config.outputPath`. Ids are renumbered from a fixed seed, so the same inputs give the same bytes; when the output (apart from the version) is identical to the previous one, nothing is written and `build` returns `{ changed: false }`.
 
 `build` is the renamed UniPocket MirageX `res()` pipeline entrypoint.
 
@@ -49,7 +49,7 @@ pnpm --filter @mirage-x/mirror feedback
 
 - staging: `scripts/feedback/ResFeedbackOriginal.json`（gitignore）
 - frame は `Static.FrameCode` が一致するときだけ更新（`Simple` / `InstalledAvatar`）
-- 差分なしなら yaml 比較でスキップ
+- 中身が同じ（frdt `compare` で id を除いて比較）なら書き込まない（`writeFeedbackIfChanged`）
 - 部品は実行時に `assets/` から読むので、取り込んだあと mirror を再ビルドする必要はありません（空の Unit の雛形は `assets/unit/emptyFeedback.brson`）
 
 Unit 用 feedback はアプリ側（例: `examples/basic` の `feedback:unit`）を使います。

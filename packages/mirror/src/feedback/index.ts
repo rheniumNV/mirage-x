@@ -12,5 +12,6 @@ export {
   readFeedback,
   readFeedbackIfExists,
   writeFeedback,
+  writeFeedbackIfChanged,
 } from "./feedbackFile.js";
 export type { FeedbackFile } from "./feedbackFile.js";
