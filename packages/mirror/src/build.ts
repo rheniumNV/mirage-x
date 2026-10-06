@@ -10,7 +10,7 @@ import {
 
 /** Seed for `renumberIds`, so that the same output writes the same bytes. */
 const ID_SEED = 0;
-const VERSION_VARIABLE = "Env.Version.Current";
+export const VERSION_VARIABLE = "Env.Version.Current";
 
 export type BuildConfig = {
   appCode: string;

@@ -45,5 +45,7 @@ jobs:
       - name: Build example mirror (output.brson)
         run: pnpm --filter @mirage-x/example-basic build:mirror
 
-      - name: Check example output
-        run: test -s examples/basic/output/output.brson
+      # Structure and values against examples/basic/baseline/output.brson
+      # (ids and the app version are not compared).
+      - name: Compare example output with the baseline
+        run: pnpm --filter @mirage-x/example-basic check:output

@@ -19,6 +19,13 @@ pnpm --filter @mirage-x/example-basic build:mirror
 
 Writes `output/output.brson` and `output/version.json`. Re-run after changing Units or their `ResFeedback.brson`.
 
+`check:output` compares `output/output.brson` with the committed `baseline/output.brson` by structure and values (ids and the app version are not compared); CI runs it. When the output is meant to change, replace the baseline and commit it:
+
+```bash
+pnpm --filter @mirage-x/example-basic check:output
+pnpm --filter @mirage-x/example-basic baseline:update
+```
+
 ## Start the server
 
 ```bash
@@ -66,10 +73,11 @@ pnpm --filter @mirage-x/example-basic feedback:unit
 pnpm --filter @mirage-x/example-basic feedback:unit -- "Demo/SlotHost"
 ```
 
-3. Rebuild the artifact:
+3. Rebuild the artifact and update the baseline:
 
 ```bash
 pnpm --filter @mirage-x/example-basic build:mirror
+pnpm --filter @mirage-x/example-basic baseline:update
 ```
 
-Staging files land in `src/dev/resFeedback/` (`ResFeedbackOriginal.brson`, the item as saved in Resonite). Per-unit outputs are `src/unit/<Package>/<Unit>/ResFeedback.brson` (+ `ResFeedbackMeta.json` when changed). Each unit's `mirror.ts` reads it with `readFeedbackIfExists(new URL("./ResFeedback.brson", import.meta.url))`; a unit without one starts from the empty template.
+Staging files land in `src/dev/resFeedback/` (`ResFeedbackOriginal.brson`, the item as saved in Resonite). Per-unit outputs are `src/unit/<Package>/<Unit>/ResFeedback.brson` (+ `ResFeedbackMeta.json` when changed). Each unit's `mirror.ts` reads it with `readFeedbackIfExists(new URL("./ResFeedback.brson", import.meta.url))`; a unit without one starts with an empty `Main`.
