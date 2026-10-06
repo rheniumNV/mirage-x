@@ -269,15 +269,9 @@ importers:
       '@mirage-x/core':
         specifier: workspace:*
         version: link:../core
-      '@mirage-x/virtual-object':
-        specifier: workspace:*
-        version: link:../virtual-object
       axios:
         specifier: ^1.7.7
         version: 1.19.0(debug@4.4.3)
-      brson.js:
-        specifier: ^1.0.5
-        version: 1.0.5
     devDependencies:
       tsx:
         specifier: ^4.19.4
@@ -565,13 +559,6 @@ packages:
   body-parser@1.20.6:
     resolution: {integrity: sha512-p5tAzS57i5MV9fZFDj9LeIiTZEufbSe2eDozP+ElheSUq1m74CRq1jI4mYNDdVs9vQztXFLuk/Gd6BWTdwRJ5g==}
     engines: {node: '>= 0.8', npm: 1.2.8000 || >= 1.4.16}
-
-  brson.js@1.0.5:
-    resolution: {integrity: sha512-dV8N5jGPZuQndCJECnJi2mXG1LTUecZfYOqGrb353m4jYdk7TfdeXqOZz5ktG6VvjDDv2+4z2wnI64Qe6W+aZA==}
-
-  bson-fork@6.1.5:
-    resolution: {integrity: sha512-K4W2IO/KpqhoryjYyqUoALZtgm/F0/V/1hbt5EDSVQWT3Jt1nMhvfdjaYbXlW+dKmEJPiNwsAB2X1C47FJ2mug==}
-    engines: {node: '>=16.20.1'}
 
   bytes@3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
@@ -1184,12 +1171,6 @@ snapshots:
       unpipe: 1.0.0
     transitivePeerDependencies:
       - supports-color
-
-  brson.js@1.0.5:
-    dependencies:
-      bson-fork: 6.1.5
-
-  bson-fork@6.1.5: {}
 
   bytes@3.1.2: {}
 

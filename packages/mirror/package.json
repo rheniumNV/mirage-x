@@ -28,9 +28,7 @@
   "dependencies": {
     "@frdt/frdt": "^0.2.4",
     "@mirage-x/core": "workspace:^",
-    "@mirage-x/virtual-object": "workspace:^",
-    "axios": "^1.7.7",
-    "brson.js": "^1.0.5"
+    "axios": "^1.7.7"
   },
   "devDependencies": {
     "tsx": "^4.19.4"

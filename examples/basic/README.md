@@ -72,4 +72,4 @@ pnpm --filter @mirage-x/example-basic feedback:unit -- "Demo/SlotHost"
 pnpm --filter @mirage-x/example-basic build:mirror
 ```
 
-Staging files land in `src/dev/resFeedback/` (`ResFeedbackOriginal.json`). Per-unit outputs are `src/unit/<Package>/<Unit>/ResFeedback.brson` (+ `ResFeedbackMeta.json` when changed). Each unit's `mirror.ts` reads it with `readFeedbackIfExists(new URL("./ResFeedback.brson", import.meta.url))`; a unit without one starts from the empty template.
+Staging files land in `src/dev/resFeedback/` (`ResFeedbackOriginal.brson`, the item as saved in Resonite). Per-unit outputs are `src/unit/<Package>/<Unit>/ResFeedback.brson` (+ `ResFeedbackMeta.json` when changed). Each unit's `mirror.ts` reads it with `readFeedbackIfExists(new URL("./ResFeedback.brson", import.meta.url))`; a unit without one starts from the empty template.

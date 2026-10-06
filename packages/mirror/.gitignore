@@ -1,4 +1,4 @@
 .env
-scripts/feedback/ResFeedbackOriginal.json
+scripts/feedback/ResFeedbackOriginal.brson
 scripts/feedback/ResFeedbackMetaOriginal.json
 *.tsbuildinfo
