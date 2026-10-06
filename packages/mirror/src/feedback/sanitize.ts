@@ -17,7 +17,7 @@ export const unwrapHolder = (doc: Document): Document => {
 
 const FRAMEWORK = "[FrooxEngine]FrooxEngine.";
 
-/** Dynamic / cloud variables whose value is the developer's local host. */
+/** Dynamic variables whose value is the developer's local host. */
 const LOCAL_VARIABLES = new Set([
   "Static.Web.Host",
   "Static.Web.Url.Ws",
@@ -55,10 +55,7 @@ export const sanitizeFeedback = (doc: Document): number => {
 
   for (const slot of allSlots(doc.root())) {
     slot.components().forEach(({ typeName }, i) => {
-      if (
-        typeName === `${FRAMEWORK}DynamicValueVariable<string>` ||
-        typeName.startsWith(`${FRAMEWORK}CloudValueVariable<`)
-      ) {
+      if (typeName === `${FRAMEWORK}DynamicValueVariable<string>`) {
         const name = stringOf(read(slot, i, "VariableName"));
         const value = stringOf(read(slot, i, "Value"));
         if (name && LOCAL_VARIABLES.has(name) && value) {

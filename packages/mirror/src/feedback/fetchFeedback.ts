@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { Document } from "@frdt/frdt";
+
 import { getAsset, getRecords, pickLatestObject } from "./fetchUtil.js";
 import { STAGED_FEEDBACK, STAGED_META } from "./staging.js";
 
@@ -42,6 +44,14 @@ export const fetchFeedback = async (option: {
   }
 
   const bytes = await getAsset(latestObject.assetUri);
+  try {
+    Document.open(bytes);
+  } catch (error) {
+    throw new Error(
+      `${latestObject.assetUri} is not a Resonite .brson the feedback can use`,
+      { cause: error },
+    );
+  }
 
   fs.mkdirSync(option.outputPath, { recursive: true });
   fs.writeFileSync(feedbackPath, bytes);

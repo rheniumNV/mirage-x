@@ -29,8 +29,9 @@ import {
   str,
   bool,
 } from "../src/frdt/util.js";
+import { generateInstallFrame } from "../src/frame/installFrame/index.js";
 import { generateSimpleFrame } from "../src/frame/simpleFrame/index.js";
-import { generateClient } from "../src/generateClient.js";
+import { generateClient, type GenerateFrame } from "../src/generateClient.js";
 import { generateMirrorUnitFromFeedback } from "../src/unit/generateMirrorUnitFromFeedback.js";
 
 const unit = (code: string) =>
@@ -42,7 +43,9 @@ const unit = (code: string) =>
   });
 
 /** What a feedback saved from a running client looks like. */
-const savedClient = (): Document => {
+const savedClient = (
+  generateFrame: GenerateFrame = generateSimpleFrame,
+): Document => {
   const doc = generateClient({
     appCode: "TestApp",
     hostCVPath: "",
@@ -54,7 +57,7 @@ const savedClient = (): Document => {
     hostAccessReason: { ja: "", en: "", ko: "" },
     resetOnSave: true,
     units: { Test: { Panel: unit("Test/Panel"), Other: unit("Test/Other") } },
-    generateFrame: generateSimpleFrame,
+    generateFrame,
   });
   // Saved from a local session (the bundled assets may already be clean).
   setVariableValues(doc, "Static.Web.Host", str("localhost:3100"));
@@ -133,6 +136,27 @@ describe("feedback attach", () => {
     const install = tempDir();
     attachInstallFrame({ inputPath: input, outputPath: install });
     assert.deepEqual(fs.readdirSync(install), []);
+  });
+
+  it("attachInstallFrame removes the core and ENV; other frames are skipped", () => {
+    const input = staged(savedClient(generateInstallFrame));
+    const install = tempDir();
+    attachInstallFrame({ inputPath: input, outputPath: install });
+
+    const frame = readFeedback(path.join(install, "ResFeedback.brson"));
+    const root = frame.root();
+    assert.equal(root.name(), "TestAppRoot");
+    assert.equal(childNamed(requireChild(root, "DV"), "ENV"), undefined);
+    const appRoot = frame.slotById(requireReference(root, "Static.AppRoot"));
+    assert.equal(appRoot.name(), "AppRoot");
+    assert.equal(childNamed(appRoot, "Main"), undefined);
+    assert.ok(
+      variableValues(frame, "Static.Web.Host").every((v) => v === null || v === ""),
+    );
+
+    const simple = tempDir();
+    attachSimpleFrame({ inputPath: input, outputPath: simple });
+    assert.deepEqual(fs.readdirSync(simple), []);
   });
 
   it("attachUnits writes the matching units, once", () => {
