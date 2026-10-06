@@ -8,7 +8,6 @@ Alpha-quality rewrite extracted from UniPocket into a publishable monorepo. APIs
 
 | Package | Role |
 | --- | --- |
-| [`@mirage-x/virtual-object`](packages/virtual-object) | Virtual slot / component / field tree |
 | [`@mirage-x/core`](packages/core) | Runtime: `MirageXServer`, Units, React reconciler |
 | [`@mirage-x/mirror`](packages/mirror) | Build-time pipeline: `build()` → `output.brson` |
 
@@ -41,7 +40,6 @@ Then drag `examples/basic/output/output.brson` into Resonite. See [examples/basi
 
 ```text
 packages/
-  virtual-object/
   core/
   mirror/
 examples/

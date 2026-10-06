@@ -9,7 +9,7 @@ import type {
 /**
  * Small helpers over `@frdt/frdt` for the MirageX assembly: values, lookups by
  * name / dynamic variable, and the components MirageX creates (the same
- * fields as the former VirtualObject component templates).
+ * fields as the component templates MirageX used before frdt).
  */
 
 export const SLOT_REFERENCE_VARIABLE =
