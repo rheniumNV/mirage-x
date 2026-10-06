@@ -204,7 +204,45 @@ Children:
             Active:
               ID: "?"
               Data: true
-            ID: ID:Child:0
+            ID: "?"
+            Persistent-ID: "?"
+            Position:
+              ID: "?"
+              Data:
+                - 0
+                - 0
+                - 0
+            Rotation:
+              ID: "?"
+              Data:
+                - 0
+                - 0
+                - 0
+                - 111111
+            Scale:
+              ID: "?"
+              Data:
+                - 111111
+                - 111111
+                - 111111
+            Tag:
+              ID: "?"
+              Data: ""
+            OrderOffset:
+              ID: "?"
+              Data: 0
+            Components:
+              ID: "?"
+              Data: []
+            Children: []
+            ParentReference: ""
+          - Name:
+              ID: "?"
+              Data: Child2
+            Active:
+              ID: "?"
+              Data: true
+            ID: ID:Child2:0
             Persistent-ID: "?"
             Position:
               ID: "?"
@@ -490,7 +528,7 @@ Children:
         Active:
           ID: "?"
           Data: true
-        ID: "?"
+        ID: ID:DV/Refs:0
         Persistent-ID: "?"
         Position:
           ID: "?"
@@ -535,10 +573,29 @@ Children:
                   Data: Refs.anchor
                 Reference:
                   ID: "?"
-                  Data: ID:Child:0
+                  Data: ID:Child2:0
                 OverrideOnLink:
                   ID: "?"
                   Data: false
+            - Type: 6
+              Data:
+                ID: "?"
+                persistent-ID: "?"
+                UpdateOrder:
+                  ID: "?"
+                  Data: 0
+                Enabled:
+                  ID: "?"
+                  Data: true
+                _worker:
+                  ID: "?"
+                  Data: ID:DV/Refs:0
+                _gizmo:
+                  ID: "?"
+                  Data: null
+                _type:
+                  ID: "?"
+                  Data: 95000
         Children: []
         ParentReference: ""
     ParentReference: ""
