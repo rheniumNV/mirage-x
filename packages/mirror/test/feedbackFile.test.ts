@@ -14,6 +14,7 @@ import {
   writeFeedback,
   writeFeedbackIfChanged,
 } from "../src/feedback/feedbackFile.js";
+import { requireChild, requireReference } from "../src/frdt/util.js";
 import { generateMirrorUnitFromFeedback } from "../src/unit/generateMirrorUnitFromFeedback.js";
 
 describe("feedback files (.brson)", () => {
@@ -22,7 +23,6 @@ describe("feedback files (.brson)", () => {
       "core/ResFeedback.brson",
       "frame/simpleFrame/ResFeedback.brson",
       "frame/installFrame/ResFeedback.brson",
-      "unit/emptyFeedback.brson",
     ]) {
       const doc = readFeedback(assetPath(part));
       assert.match(doc.versionNumber(), /^\d+\.\d+\.\d+/, part);
@@ -34,7 +34,7 @@ describe("feedback files (.brson)", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "mirage-x-"));
     try {
       const file = path.join(dir, "ResFeedback.brson");
-      const original = readFeedback(assetPath("unit/emptyFeedback.brson"));
+      const original = readFeedback(assetPath("frame/simpleFrame/ResFeedback.brson"));
       writeFeedback(file, original);
       assert.deepEqual(compare(readFeedback(file), original), []);
       assert.ok(readFeedbackIfExists(file));
@@ -47,7 +47,7 @@ describe("feedback files (.brson)", () => {
     }
   });
 
-  it("a unit without feedback starts from the empty template", () => {
+  it("a unit without feedback starts with an empty Main", () => {
     const config = generateUnitConfig({
       code: "Test/NoFeedback",
       propsConfig: { size: UnitProp.Float(1) },
@@ -57,13 +57,25 @@ describe("feedback files (.brson)", () => {
       rawFeedback: readFeedbackIfExists("does-not-exist.brson"),
     });
     assert.equal(unit.root().name(), "Test/NoFeedback");
+    // Nothing in it was saved by Resonite: it takes the core's version.
+    const core = readFeedback(assetPath("core/ResFeedback.brson"));
+    assert.equal(unit.versionNumber(), core.versionNumber());
+    assert.deepEqual(unit.featureFlags(), core.featureFlags());
+    const ref = unit.slotById(
+      requireReference(requireChild(unit.root(), "DV"), "Static.Ref"),
+    );
+    const main = requireChild(ref, "Main");
+    const dvStatic = requireChild(ref, "DV/Static");
+    assert.equal(requireReference(dvStatic, "Static.Main"), main.id());
+    assert.equal(requireReference(dvStatic, "Static.ChildrenParent"), main.id());
   });
 
   it("writeFeedbackIfChanged writes only when the content changes", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "mirage-x-"));
     try {
       const file = path.join(dir, "ResFeedback.brson");
-      const template = () => readFeedback(assetPath("unit/emptyFeedback.brson"));
+      const template = () =>
+        readFeedback(assetPath("frame/simpleFrame/ResFeedback.brson"));
       assert.equal(writeFeedbackIfChanged(file, template()), true);
       // Same content (ids may differ): not written again.
       assert.equal(writeFeedbackIfChanged(file, template()), false);

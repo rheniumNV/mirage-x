@@ -2,6 +2,7 @@ import { Document } from "@frdt/frdt";
 
 import { assetPath } from "./assets.js";
 import { readFeedback } from "./feedback/feedbackFile.js";
+import { partVersions, type Part } from "./frdt/versions.js";
 import {
   addValueVariable,
   bool,
@@ -98,5 +99,23 @@ export const generateClient = ({
     label: "ENV (core)",
   });
 
-  return generateFrame({ appCode, core, env });
+  const output = generateFrame({ appCode, core, env });
+
+  // The frame keeps its own version while the core and units are imported;
+  // write the oldest part's instead.
+  const parts: Part[] = [
+    { label: "frame", doc: output },
+    { label: "core", doc: core },
+    ...Object.entries(units).flatMap(([category, categoryUnits]) =>
+      Object.entries(categoryUnits).map(([name, doc]) => ({
+        label: `${category}/${name}`,
+        doc,
+      })),
+    ),
+  ];
+  const { versionNumber, featureFlags, warnings } = partVersions(parts);
+  for (const warning of warnings) console.warn(warning);
+  output.setVersionNumber(versionNumber);
+  output.setFeatureFlags(featureFlags);
+  return output;
 };
