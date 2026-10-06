@@ -26,10 +26,11 @@ describe("partVersions", () => {
     ]);
     assert.equal(result.versionNumber, "2026.8.1.10");
     assert.deepEqual(result.featureFlags, flags("A", ["B", 1]));
-    // Within the span: only the dropped flags are reported.
-    assert.equal(result.warnings.length, 2);
-    assert.match(result.warnings[0]!, /FeatureFlag C .*: core$/);
-    assert.match(result.warnings[1]!, /FeatureFlag D .*: frame, core$/);
+    // Within the span: the differing and dropped flags are reported.
+    assert.deepEqual(result.warnings.length, 3);
+    assert.match(result.warnings[0]!, /FeatureFlag B differs .* uses 1: frame 2, core 1, unit 3$/);
+    assert.match(result.warnings[1]!, /FeatureFlag C .*: core$/);
+    assert.match(result.warnings[2]!, /FeatureFlag D .*: frame, core$/);
   });
 
   it("compares versions as numbers", () => {
@@ -48,6 +49,26 @@ describe("partVersions", () => {
     assert.equal(result.versionNumber, "2026.1.2.3");
     assert.equal(result.warnings.length, 1);
     assert.match(result.warnings[0]!, /unit 2026\.1\.2\.3, frame 2026\.9\.18\.82/);
+  });
+
+  it("reports types whose TypeVersions differ", () => {
+    const withType = (label: string, typeVersion: number | null) => {
+      const p = part(label, "2026.9.18.82", flags());
+      p.doc.addComponent(p.doc.root(), "[FrooxEngine]FrooxEngine.Grabbable", typeVersion, []);
+      return p;
+    };
+    const result = partVersions([
+      withType("frame", 2),
+      withType("unit", null),
+      part("core", "2026.9.18.82", flags()),
+    ]);
+    assert.deepEqual(result.warnings, [
+      "TypeVersion of [FrooxEngine]FrooxEngine.Grabbable differs between parts: frame 2, unit 0",
+    ]);
+    assert.deepEqual(
+      partVersions([withType("frame", 2), withType("unit", 2)]).warnings,
+      [],
+    );
   });
 
   it("is quiet when the parts agree", () => {

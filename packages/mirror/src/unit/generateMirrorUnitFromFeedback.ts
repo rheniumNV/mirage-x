@@ -134,18 +134,16 @@ type UnitSource = {
   copied: (sourceId: string, what: string) => string;
 };
 
-let coreVersionCache:
-  | { versionNumber: string; featureFlags: FeatureFlag[] }
-  | undefined;
-const coreVersion = () => {
-  if (!coreVersionCache) {
-    const core = readFeedback(assetPath("core/ResFeedback.brson"));
-    coreVersionCache = {
-      versionNumber: core.versionNumber(),
-      featureFlags: core.featureFlags(),
-    };
-  }
-  return coreVersionCache;
+/**
+ * A document needs a version to be created; a unit without feedback borrows
+ * the core's (only the number and flags, nothing of the core itself).
+ */
+const coreVersion = (): { versionNumber: string; featureFlags: FeatureFlag[] } => {
+  const core = readFeedback(assetPath("core/ResFeedback.brson"));
+  return {
+    versionNumber: core.versionNumber(),
+    featureFlags: core.featureFlags(),
+  };
 };
 
 const emptyMain = (unit: Document, ref: Slot): UnitSource => {
