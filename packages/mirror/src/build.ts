@@ -1,8 +1,12 @@
-import type { VirtualContext } from "@mirage-x/virtual-object";
-import { Compress } from "brson.js";
+import type { ObjectContext } from "@mirage-x/virtual-object";
+import { DeCompress } from "brson.js";
 import fs from "node:fs";
 import path from "node:path";
-import { generateClient } from "./generateClient.js";
+import {
+  generateClient,
+  type GenerateFrame,
+  type MirrorUnits,
+} from "./generateClient.js";
 import { readFileSync } from "./util/readFileSync.js";
 import { res2yaml } from "./util/res2yaml.js";
 
@@ -33,15 +37,11 @@ export const build = async (
     resetOnSave?: boolean;
     developCode?: string;
   },
-  units: { [key: string]: { [key: string]: VirtualContext } },
-  generateFrame: (option: {
-    appCode: string;
-    core: VirtualContext;
-    generateEnv: () => VirtualContext;
-  }) => VirtualContext,
+  units: MirrorUnits,
+  generateFrame: GenerateFrame,
 ) => {
   console.debug(`start generating version ${currentVersion}`);
-  const { context: output, warnings: outputExportWarnings } = generateClient({
+  const outputDocument = generateClient({
     appCode: config.appCode,
     hostCVPath: config.cv.mirage.host.path,
     useSSLCVPath: config.cv.mirage.useSsl.path,
@@ -58,11 +58,13 @@ export const build = async (
     resetOnSave: config.resetOnSave ?? true,
     units,
     generateFrame,
-  }).export();
-  if (outputExportWarnings.length > 0) {
-    console.warn("outputExportWarnings", outputExportWarnings);
-  }
+  });
+  const outputBrson = outputDocument.writeBrson();
   console.debug(`end generating version ${currentVersion}`);
+
+  // The yaml (ids renumbered) is only for the change check below; #11
+  // replaces it with a byte comparison after renumberIds.
+  const output = JSON.parse(DeCompress(outputBrson)) as ObjectContext;
 
   const outputYaml = res2yaml(output);
 
@@ -93,10 +95,6 @@ export const build = async (
 
   const newOutput = JSON.stringify(output, null, 0);
 
-  console.log("start compressing");
-  const outputBrson = Compress(newOutput);
-  console.log("end compressing");
-
   fs.mkdirSync(config.outputPath, { recursive: true });
 
   fs.writeFileSync(path.resolve(config.outputPath, "output.json"), newOutput);
@@ -105,8 +103,7 @@ export const build = async (
 
   fs.writeFileSync(
     path.resolve(config.outputPath, "output.brson"),
-    Buffer.from(outputBrson),
-    "binary",
+    outputBrson,
   );
 
   fs.writeFileSync(

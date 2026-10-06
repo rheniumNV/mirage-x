@@ -1,299 +1,178 @@
+import { Document, type Slot } from "@frdt/frdt";
 import type { DetailBase, UnitConfig } from "@mirage-x/core";
-import type {
-  FieldDataPrimitive,
-  ObjectContext,
-  VirtualContext,
-} from "@mirage-x/virtual-object";
-import {
-  VirtualContext as VC,
-  dynamicField,
-  dynamicReferenceVariable,
-  dynamicVariableSpace,
-} from "@mirage-x/virtual-object";
+
 import { assetPath } from "../assets.js";
 import { readFeedback } from "../feedback/feedbackFile.js";
+import {
+  addDynamicField,
+  addDynamicVariableSpace,
+  addSlotReferenceVariable,
+  childNamed,
+  importSlots,
+  requireChild,
+  requireReference,
+  stringOf,
+} from "../frdt/util.js";
 
+const NOT_COPIED = new Set(["DV/Props", "DV/Refs", "DV/Static"]);
+
+/**
+ * Build a unit's mirror object from its feedback (the unit as saved in
+ * Resonite). Layout of the result:
+ *
+ * ```text
+ * <code>                 DynamicVariableSpace
+ *   DV                   Static.Ref -> Ref
+ *   Ref                  DynamicVariableSpace
+ *     Main ...           (copied from the feedback, with its other children)
+ *     DV/Static          Static.Root / Static.Main / Static.ChildrenParent
+ *     DV/Props           Props.<name> (DynamicField, or DynamicReferenceVariable<Slot>)
+ *     DV/Refs            Refs.<name>  (only with refsConfig)
+ * ```
+ */
 export const generateMirrorUnitFromFeedback = <C extends DetailBase>({
   config,
   rawFeedback,
 }: {
   /**
-   * The unit's feedback (`readFeedbackIfExists(...)`). When it is missing or
-   * not a Resonite object, the empty unit template is used.
+   * The unit's feedback (`readFeedbackIfExists(...)`). When it is missing,
+   * the empty unit template is used.
    */
-  rawFeedback?: unknown;
+  rawFeedback?: Document;
   config: UnitConfig<C>;
-}): VirtualContext => {
-  const isObjectContext = (value: unknown): value is ObjectContext =>
-    typeof (value as { VersionNumber?: unknown } | null | undefined)
-      ?.VersionNumber === "string";
-  const result = VC.generate(
-    isObjectContext(rawFeedback)
-      ? rawFeedback
-      : readFeedback(assetPath("unit/emptyFeedback.brson")),
-  );
-  if (result.status !== "SUCCESS") {
-    throw new Error(`${result.code} ${result.reason}`);
-  }
-  const { context: feedback, warnings: feedbackGenerateWarnings } = result.data;
+}): Document => {
+  const feedback =
+    rawFeedback ?? readFeedback(assetPath("unit/emptyFeedback.brson"));
 
-  if (feedbackGenerateWarnings.length > 0) {
-    console.warn("feedbackGenerateWarnings", feedbackGenerateWarnings);
-  }
-  const feedbackDvRef = feedback.object.children
-    .find((slot) => slot.name.asPrimitive() === "DV")
-    ?.components.find(
-      (component) =>
-        component.type ===
-          "[FrooxEngine]FrooxEngine.DynamicReferenceVariable<[FrooxEngine]FrooxEngine.Slot>" &&
-        component.data.VariableName?.asPrimitive() === "Static.Ref",
-    )?.data.Reference?.data;
-  if (
-    !(
-      feedbackDvRef &&
-      feedbackDvRef.type === "Slot" &&
-      feedbackDvRef.data.type === "Ref" &&
-      feedbackDvRef.data.target
-    )
-  ) {
-    throw new Error("Feedback Ref not found");
-  }
-  const feedbackSlotRef = feedbackDvRef.data.target;
-  const feedbackSlotDvProps = feedbackSlotRef.children.find(
-    (slot) => slot.name.data.data === "DV/Props",
+  const feedbackRef = feedback.slotById(
+    requireReference(requireChild(feedback.root(), "DV"), "Static.Ref"),
   );
-  const feedbackSlotDvStatic = feedbackSlotRef.children.find(
-    (slot) => slot.name.data.data === "DV/Static",
+  const feedbackStatic = requireChild(feedbackRef, "DV/Static");
+  const mainId = requireReference(feedbackStatic, "Static.Main");
+  const childrenParentId = requireReference(
+    feedbackStatic,
+    "Static.ChildrenParent",
   );
 
-  const feedbackDvMain = feedbackSlotDvStatic?.components.find(
-    (component) => component.data.VariableName?.asPrimitive() === "Static.Main",
-  )?.data.Reference?.data;
-  if (
-    !(
-      feedbackDvMain &&
-      feedbackDvMain.type === "Slot" &&
-      feedbackDvMain.data.type === "Ref" &&
-      feedbackDvMain.data.target
-    )
-  ) {
-    throw new Error("Feedback Main not found");
-  }
-  const feedbackSlotMain = feedbackDvMain.data.target;
-  if (!feedbackSlotMain) {
-    throw new Error("Feedback Main not found");
-  }
-  const feedbackDvChildrenParent = feedbackSlotDvStatic?.components.find(
-    (component) =>
-      component.data.VariableName?.asPrimitive() === "Static.ChildrenParent",
-  )?.data.Reference?.data;
-  if (
-    !(
-      feedbackDvChildrenParent &&
-      feedbackDvChildrenParent.type === "Slot" &&
-      feedbackDvChildrenParent.data.type === "Ref" &&
-      feedbackDvChildrenParent.data.target
-    )
-  ) {
-    throw new Error("Feedback ChildrenParent not found");
-  }
-  const feedbackSlotChildrenParent = feedbackDvChildrenParent.data.target;
-
-  const { context, warnings: contextGenerateWarnings } = VC.createEmpty();
-  if (contextGenerateWarnings.length > 0) {
-    console.warn("contextGenerateWarnings", contextGenerateWarnings);
-  }
-  context.object.name.data.data = config.code;
-  context.object.createComponent(dynamicVariableSpace({}));
-
-  const slotDv = context.object.createChild({ name: "DV" });
-  const dvStaticRef = slotDv.createComponent(
-    dynamicReferenceVariable({
-      type: "[FrooxEngine]FrooxEngine.Slot",
-      variableName: "Static.Ref",
-    }),
-  ).data.Reference;
-  if (!dvStaticRef) {
-    throw new Error("dvStaticRef not found");
-  }
-
-  const slotRef = context.object.createChild({ name: "Ref" });
-  slotRef.createComponent(dynamicVariableSpace({}));
-  feedbackSlotMain.setParent(slotRef);
-  dvStaticRef.data = {
-    type: "Slot",
-    data: { type: "Ref", target: slotRef },
-  };
-
-  feedbackSlotRef.children.forEach((slot) => {
-    if (
-      slot !== feedbackSlotMain &&
-      slot.name.data.data !== "DV/Props" &&
-      slot.name.data.data !== "DV/Refs" &&
-      slot.name.data.data !== "DV/Static"
-    ) {
-      slot.setParent(slotRef);
-    }
-  });
-
-  const slotDvStatic = slotRef.createChild({ name: "DV/Static" });
-
-  const slotDvStaticRootSlotDVReference = slotDvStatic.createComponent(
-    dynamicReferenceVariable({
-      type: "[FrooxEngine]FrooxEngine.Slot",
-      variableName: "Static.Root",
-    }),
-  ).data.Reference;
-  if (!slotDvStaticRootSlotDVReference) {
-    throw new Error("slotDvStaticRootSlotDVReference not found");
-  }
-  slotDvStaticRootSlotDVReference.data = {
-    type: "Slot",
-    data: { type: "Ref", target: slotRef },
-  };
-
-  const slotDvStaticMainSlotDVReference = slotDvStatic.createComponent(
-    dynamicReferenceVariable({
-      type: "[FrooxEngine]FrooxEngine.Slot",
-      variableName: "Static.Main",
-    }),
-  ).data.Reference;
-  if (!slotDvStaticMainSlotDVReference) {
-    throw new Error("slotDvStaticMainSlotDVReference not found");
-  }
-  slotDvStaticMainSlotDVReference.data = {
-    type: "Slot",
-    data: { type: "Ref", target: feedbackSlotMain },
-  };
-
-  const slotDvStaticChildrenParentSlotDVReference =
-    slotDvStatic.createComponent(
-      dynamicReferenceVariable({
-        type: "[FrooxEngine]FrooxEngine.Slot",
-        variableName: "Static.ChildrenParent",
-      }),
-    ).data.Reference;
-
-  if (!slotDvStaticChildrenParentSlotDVReference) {
-    throw new Error("slotDvStaticChildrenParentSlotDVReference not found");
-  }
-  slotDvStaticChildrenParentSlotDVReference.data = {
-    type: "Slot",
-    data: { type: "Ref", target: feedbackSlotChildrenParent },
-  };
-
-  const slotDvProps = slotRef.createChild({ name: "DV/Props" });
-  const feedbackSlotDvRefs = feedbackSlotRef.children.find(
-    (slot) => slot.name.data.data === "DV/Refs",
+  const unit = Document.empty(
+    config.code,
+    feedback.versionNumber(),
+    feedback.featureFlags(),
   );
-  const feedbackFieldProps = feedbackSlotDvProps?.components
-    .filter((component) =>
-      component.type.startsWith("[FrooxEngine]FrooxEngine.DynamicField<"),
-    )
-    .reduce(
-      (acc, component) => {
-        const variableName = component.data.VariableName?.asPrimitive() as
-          | string
-          | null;
-        const value =
-          component.data["TargetField"]?.data ??
-          component.data["TargetReference"]?.data;
-        return {
-          ...acc,
-          ...(variableName ? { [variableName]: value } : {}),
-        };
-      },
-      {} as { [key: string]: unknown },
-    );
-  const feedbackReferenceProps = feedbackSlotDvProps?.components
-    .filter((component) =>
-      component.type.startsWith(
-        "[FrooxEngine]FrooxEngine.DynamicReferenceVariable<",
-      ),
-    )
-    .reduce(
-      (acc, component) => {
-        const variableName = component.data.VariableName?.asPrimitive() as
-          | string
-          | null;
-        const value = component.data.Reference?.data;
-        return {
-          ...acc,
-          ...(variableName ? { [variableName]: value } : {}),
-        };
-      },
-      {} as { [key: string]: unknown },
-    );
-  const feedbackNamedRefs = feedbackSlotDvRefs?.components
-    .filter((component) =>
-      component.type.startsWith(
-        "[FrooxEngine]FrooxEngine.DynamicReferenceVariable<",
-      ),
-    )
-    .reduce(
-      (acc, component) => {
-        const variableName = component.data.VariableName?.asPrimitive() as
-          | string
-          | null;
-        const value = component.data.Reference?.data;
-        return {
-          ...acc,
-          ...(variableName ? { [variableName]: value } : {}),
-        };
-      },
-      {} as { [key: string]: unknown },
-    );
+  const root = unit.root();
+  addDynamicVariableSpace(unit, root);
+  const dv = unit.addSlot(root, "DV");
+  const ref = unit.addSlot(root, "Ref");
+  addSlotReferenceVariable(unit, dv, "Static.Ref", ref.id());
+  addDynamicVariableSpace(unit, ref);
 
-  config.syncPropConfigList.forEach((propConfig) => {
-    if (propConfig.type === "Reference") {
-      const feedbackValue =
-        feedbackReferenceProps?.[`Props.${propConfig.name}`] ??
-        feedbackFieldProps?.[`Props.${propConfig.name}`];
-      const dvRef = slotDvProps.createComponent(
-        dynamicReferenceVariable({
-          type: "[FrooxEngine]FrooxEngine.Slot",
-          variableName: `Props.${propConfig.name}`,
-        }),
+  // Main first, then the feedback's other children except the DV slots that
+  // are rebuilt below.
+  const imported = importSlots(
+    unit,
+    ref,
+    [
+      feedback.slotById(mainId),
+      ...feedbackRef
+        .children()
+        .filter(
+          (slot) => slot.id() !== mainId && !NOT_COPIED.has(slot.name()),
+        ),
+    ],
+    { label: `${config.code}: the feedback` },
+  );
+  const copied = (sourceId: string, what: string): string => {
+    const id = imported.newId(sourceId);
+    if (!id) {
+      throw new Error(
+        `${config.code}: ${what} points outside the copied slots (${sourceId})`,
       );
-      if (dvRef.data.Reference && feedbackValue) {
-        dvRef.data.Reference.data = feedbackValue as never;
-      }
-      return;
     }
+    return id;
+  };
 
-    const feedbackValue = feedbackFieldProps?.[`Props.${propConfig.name}`];
-    const dvField = slotDvProps.createComponent(
-      dynamicField({
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        //@ts-ignore
-        type: propConfig.resDVType,
-        variableName: `Props.${propConfig.name}`,
-      }),
-    );
-    if (dvField.data.TargetField && feedbackValue) {
-      dvField.data.TargetField.data = feedbackValue as FieldDataPrimitive;
+  const dvStatic = unit.addSlot(ref, "DV/Static");
+  addSlotReferenceVariable(unit, dvStatic, "Static.Root", ref.id());
+  addSlotReferenceVariable(
+    unit,
+    dvStatic,
+    "Static.Main",
+    copied(mainId, "Static.Main"),
+  );
+  addSlotReferenceVariable(
+    unit,
+    dvStatic,
+    "Static.ChildrenParent",
+    copied(childrenParentId, "Static.ChildrenParent"),
+  );
+
+  // Targets the feedback's DV/Props and DV/Refs pointed at, by variable name.
+  const targets = (slot: Slot | undefined) => {
+    const map = new Map<string, string>();
+    slot?.components().forEach((component, i) => {
+      const name = stringOf(slot.tryComponentValue(i, "VariableName"));
+      if (!name) return;
+      const target = component.typeName.startsWith(
+        "[FrooxEngine]FrooxEngine.DynamicField<",
+      )
+        ? (stringOf(slot.tryComponentValue(i, "TargetField")) ??
+          stringOf(slot.tryComponentValue(i, "TargetReference")))
+        : component.typeName.startsWith(
+              "[FrooxEngine]FrooxEngine.DynamicReferenceVariable<",
+            )
+          ? stringOf(slot.tryComponentValue(i, "Reference"))
+          : null;
+      if (target) map.set(name, target);
+    });
+    return map;
+  };
+  const propTargets = targets(childNamed(feedbackRef, "DV/Props"));
+  const refTargets = targets(childNamed(feedbackRef, "DV/Refs"));
+
+  /** A DynamicField target must be inside the unit. */
+  const fieldTarget = (name: string) => {
+    const source = propTargets.get(name);
+    return source ? copied(source, name) : null;
+  };
+  /**
+   * Slot references are set at run time by MirageX. When the saved value
+   * points outside the unit (e.g. the producer it was bound to while the
+   * feedback was saved), drop it instead of leaving a dangling id.
+   */
+  const slotTarget = (map: Map<string, string>, name: string) => {
+    const source = map.get(name);
+    if (!source) return null;
+    const id = imported.newId(source);
+    if (!id) {
+      console.warn(
+        `${config.code}: ${name} pointed outside the unit when the feedback was saved; it starts empty`,
+      );
     }
-    if (dvField.data.TargetReference && feedbackValue) {
-      dvField.data.TargetReference.data = feedbackValue as FieldDataPrimitive;
+    return id;
+  };
+
+  const dvProps = unit.addSlot(ref, "DV/Props");
+  for (const prop of config.syncPropConfigList) {
+    const name = `Props.${prop.name}`;
+    if (prop.type === "Reference") {
+      addSlotReferenceVariable(
+        unit,
+        dvProps,
+        name,
+        slotTarget(propTargets, name),
+      );
+    } else {
+      addDynamicField(unit, dvProps, prop.resDVType, name, fieldTarget(name));
     }
-  });
+  }
 
   if (config.refsConfigList.length > 0) {
-    const slotDvRefs = slotRef.createChild({ name: "DV/Refs" });
+    const dvRefs = unit.addSlot(ref, "DV/Refs");
     for (const refConfig of config.refsConfigList) {
-      const variableName = `Refs.${refConfig.name}`;
-      const feedbackValue = feedbackNamedRefs?.[variableName];
-      const dvRef = slotDvRefs.createComponent(
-        dynamicReferenceVariable({
-          type: "[FrooxEngine]FrooxEngine.Slot",
-          variableName,
-        }),
-      );
-      if (dvRef.data.Reference && feedbackValue) {
-        dvRef.data.Reference.data = feedbackValue as never;
-      }
+      const name = `Refs.${refConfig.name}`;
+      addSlotReferenceVariable(unit, dvRefs, name, slotTarget(refTargets, name));
     }
   }
 
-  return context;
+  return unit;
 };

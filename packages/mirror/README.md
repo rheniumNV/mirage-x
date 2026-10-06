@@ -1,6 +1,6 @@
 # @mirage-x/mirror
 
-Builds Resonite mirror assets (`output.brson` / `output.json` / `output.yaml`) from MirageX unit virtual objects and the core / frame parts in `assets/` (Resonite `.brson`).
+Builds the Resonite mirror (`output.brson`, plus `output.json` / `output.yaml` for now) from MirageX units and the core / frame parts in `assets/` (Resonite `.brson`). Documents are assembled with [`@frdt/frdt`](https://www.npmjs.com/package/@frdt/frdt).
 
 ## Install
 
@@ -25,7 +25,7 @@ import {
 
 ## Usage
 
-1. Build unit trees with `generateMirrorUnitFromFeedback` (or your own `VirtualContext` units).
+1. Build each unit with `generateMirrorUnitFromFeedback({ config, rawFeedback: readFeedbackIfExists(url) })` (an `@frdt/frdt` `Document`).
 2. Call `build(config, units, generateSimpleFrame | generateInstallFrame)`.
 3. Artifacts are written under `config.outputPath` when the tree changed vs the previous `output.yaml`.
 

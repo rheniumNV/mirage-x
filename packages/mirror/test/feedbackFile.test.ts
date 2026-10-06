@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
 
+import { compare } from "@frdt/frdt";
 import { UnitProp, generateUnitConfig } from "@mirage-x/core";
 
 import { assetPath } from "../src/assets.js";
@@ -15,15 +16,16 @@ import {
 import { generateMirrorUnitFromFeedback } from "../src/unit/generateMirrorUnitFromFeedback.js";
 
 describe("feedback files (.brson)", () => {
-  it("bundled parts are readable Resonite objects", () => {
+  it("bundled parts open as Resonite documents", () => {
     for (const part of [
       "core/ResFeedback.brson",
       "frame/simpleFrame/ResFeedback.brson",
       "frame/installFrame/ResFeedback.brson",
       "unit/emptyFeedback.brson",
     ]) {
-      const context = readFeedback(assetPath(part));
-      assert.equal(typeof context.VersionNumber, "string", part);
+      const doc = readFeedback(assetPath(part));
+      assert.match(doc.versionNumber(), /^\d+\.\d+\.\d+/, part);
+      assert.ok(doc.slotCount() > 0, part);
     }
   });
 
@@ -33,8 +35,8 @@ describe("feedback files (.brson)", () => {
       const file = path.join(dir, "ResFeedback.brson");
       const original = readFeedback(assetPath("unit/emptyFeedback.brson"));
       writeFeedback(file, original);
-      assert.deepEqual(readFeedback(file), original);
-      assert.deepEqual(readFeedbackIfExists(file), original);
+      assert.deepEqual(compare(readFeedback(file), original), []);
+      assert.ok(readFeedbackIfExists(file));
       assert.equal(
         readFeedbackIfExists(path.join(dir, "missing.brson")),
         undefined,
@@ -53,6 +55,6 @@ describe("feedback files (.brson)", () => {
       config,
       rawFeedback: readFeedbackIfExists("does-not-exist.brson"),
     });
-    assert.equal(unit.object.name.asPrimitive(), "Test/NoFeedback");
+    assert.equal(unit.root().name(), "Test/NoFeedback");
   });
 });

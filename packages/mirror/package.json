@@ -26,6 +26,7 @@
     "feedback:attach:frame:install": "tsx scripts/feedback/attachInstallFrame.ts"
   },
   "dependencies": {
+    "@frdt/frdt": "^0.2.2",
     "@mirage-x/core": "workspace:^",
     "@mirage-x/virtual-object": "workspace:^",
     "axios": "^1.7.7",

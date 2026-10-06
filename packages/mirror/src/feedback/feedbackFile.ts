@@ -1,26 +1,38 @@
 import fs from "node:fs";
 
+import { Document } from "@frdt/frdt";
 import type { ObjectContext } from "@mirage-x/virtual-object";
-import { Compress, DeCompress } from "brson.js";
+import { Compress } from "brson.js";
 
-/**
- * Feedback parts (core / frames / units) are stored as Resonite `.brson`.
- *
- * The assembly still runs on VirtualObject, which needs the JSON form, so
- * these helpers decode to / encode from that. They are the single place to
- * switch to `@frdt/frdt` documents (#8).
- */
+/** Feedback parts (core / frames / units) are stored as Resonite `.brson`. */
 export type FeedbackFile = string | URL;
 
-export const readFeedback = (file: FeedbackFile): ObjectContext =>
-  JSON.parse(DeCompress(fs.readFileSync(file))) as ObjectContext;
+export const readFeedback = (file: FeedbackFile): Document =>
+  Document.open(fs.readFileSync(file));
 
 /** Like `readFeedback`, but `undefined` when the file does not exist. */
 export const readFeedbackIfExists = (
   file: FeedbackFile,
-): ObjectContext | undefined =>
+): Document | undefined =>
   fs.existsSync(file) ? readFeedback(file) : undefined;
 
-export const writeFeedback = (file: FeedbackFile, context: ObjectContext) => {
-  fs.writeFileSync(file, Compress(JSON.stringify(context)));
+const isDocument = (value: Document | ObjectContext): value is Document =>
+  typeof (value as Partial<Document>).writeBrson === "function";
+
+/**
+ * Write a feedback part. The feedback import (`attach*`) still produces the
+ * JSON form via VirtualObject (#14), so that is accepted too.
+ */
+export const writeFeedback = (
+  file: FeedbackFile,
+  feedback: Document | ObjectContext,
+) => {
+  // Duck-typed so that a Document from another copy of @frdt/frdt is not
+  // mistaken for JSON.
+  fs.writeFileSync(
+    file,
+    isDocument(feedback)
+      ? feedback.writeBrson()
+      : Compress(JSON.stringify(feedback)),
+  );
 };
