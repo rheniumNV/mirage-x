@@ -12,6 +12,7 @@ import {
   readFeedback,
   readFeedbackIfExists,
   writeFeedback,
+  writeFeedbackIfChanged,
 } from "../src/feedback/feedbackFile.js";
 import { generateMirrorUnitFromFeedback } from "../src/unit/generateMirrorUnitFromFeedback.js";
 
@@ -56,5 +57,23 @@ describe("feedback files (.brson)", () => {
       rawFeedback: readFeedbackIfExists("does-not-exist.brson"),
     });
     assert.equal(unit.root().name(), "Test/NoFeedback");
+  });
+
+  it("writeFeedbackIfChanged writes only when the content changes", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "mirage-x-"));
+    try {
+      const file = path.join(dir, "ResFeedback.brson");
+      const template = () => readFeedback(assetPath("unit/emptyFeedback.brson"));
+      assert.equal(writeFeedbackIfChanged(file, template()), true);
+      // Same content (ids may differ): not written again.
+      assert.equal(writeFeedbackIfChanged(file, template()), false);
+
+      const changed = template();
+      changed.root().set("Name", { kind: "string", value: "Changed" });
+      assert.equal(writeFeedbackIfChanged(file, changed), true);
+      assert.equal(readFeedback(file).root().name(), "Changed");
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

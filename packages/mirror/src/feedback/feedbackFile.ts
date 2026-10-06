@@ -1,6 +1,6 @@
 import fs from "node:fs";
 
-import { Document } from "@frdt/frdt";
+import { Document, compare } from "@frdt/frdt";
 import type { ObjectContext } from "@mirage-x/virtual-object";
 import { Compress } from "brson.js";
 
@@ -18,6 +18,28 @@ export const readFeedbackIfExists = (
 
 const isDocument = (value: Document | ObjectContext): value is Document =>
   typeof (value as Partial<Document>).writeBrson === "function";
+
+const toDocument = (feedback: Document | ObjectContext): Document =>
+  isDocument(feedback)
+    ? feedback
+    : Document.open(Compress(JSON.stringify(feedback)));
+
+/**
+ * Write a feedback part unless the file already holds the same content
+ * (compared by structure with frdt `compare`, so ids do not matter).
+ * Returns whether the file was written.
+ */
+export const writeFeedbackIfChanged = (
+  file: FeedbackFile,
+  feedback: Document | ObjectContext,
+): boolean => {
+  const next = toDocument(feedback);
+  if (fs.existsSync(file) && compare(readFeedback(file), next).length === 0) {
+    return false;
+  }
+  fs.writeFileSync(file, next.writeBrson());
+  return true;
+};
 
 /**
  * Write a feedback part. The feedback import (`attach*`) still produces the

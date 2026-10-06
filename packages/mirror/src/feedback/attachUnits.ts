@@ -6,8 +6,7 @@ import {
   deleteHolder,
 } from "@mirage-x/virtual-object";
 
-import { res2yaml } from "../util/res2yaml.js";
-import { writeFeedback } from "./feedbackFile.js";
+import { writeFeedbackIfChanged } from "./feedbackFile.js";
 
 export type AttachUnitsOptions = {
   /** Directory containing ResFeedbackOriginal.json / ResFeedbackMetaOriginal.json */
@@ -129,23 +128,14 @@ export const attachUnits = (options: AttachUnitsOptions): void => {
         if (unitObjectWarnings.length > 0) {
           console.warn(`warnings: ${unitObjectWarnings.join("\n")}`);
         }
-        const unitObjectYaml = res2yaml(unitObjectResult);
-
-        const prevYamlPath = path.resolve(unitDir, "ResFeedback.yaml");
-        const prevUnitObjectYaml = fs.existsSync(prevYamlPath)
-          ? fs.readFileSync(prevYamlPath, "utf-8")
-          : "";
-
-        if (prevUnitObjectYaml === unitObjectYaml) {
-          console.info(`no change in ${packageName}/${unit}`);
-          continue;
-        }
-
-        writeFeedback(
+        const written = writeFeedbackIfChanged(
           path.resolve(unitDir, "ResFeedback.brson"),
           unitObjectResult,
         );
-        fs.writeFileSync(prevYamlPath, unitObjectYaml);
+        if (!written) {
+          console.info(`no change in ${packageName}/${unit}`);
+          continue;
+        }
         fs.writeFileSync(
           path.resolve(unitDir, "ResFeedbackMeta.json"),
           ResFeedbackMetaOriginal,

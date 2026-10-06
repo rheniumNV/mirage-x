@@ -7,8 +7,7 @@ import {
   type ObjectContext,
 } from "@mirage-x/virtual-object";
 
-import { res2yaml } from "../util/res2yaml.js";
-import { writeFeedback } from "./feedbackFile.js";
+import { writeFeedbackIfChanged } from "./feedbackFile.js";
 
 export type AttachFeedbackPaths = {
   inputPath: string;
@@ -29,23 +28,15 @@ const writeIfChanged = (option: {
   exported: ObjectContext;
   label: string;
 }): void => {
-  const yaml = res2yaml(option.exported);
-  const prevYamlPath = path.resolve(option.outputPath, "ResFeedback.yaml");
-  const prevYaml = fs.existsSync(prevYamlPath)
-    ? fs.readFileSync(prevYamlPath, "utf-8")
-    : "";
-
-  if (prevYaml === yaml) {
-    console.info(`no change in ${option.label}`);
-    return;
-  }
-
   fs.mkdirSync(option.outputPath, { recursive: true });
-  writeFeedback(
+  const written = writeFeedbackIfChanged(
     path.resolve(option.outputPath, "ResFeedback.brson"),
     option.exported,
   );
-  fs.writeFileSync(prevYamlPath, yaml);
+  if (!written) {
+    console.info(`no change in ${option.label}`);
+    return;
+  }
 
   const metaSrc = path.resolve(option.inputPath, "ResFeedbackMetaOriginal.json");
   if (fs.existsSync(metaSrc)) {

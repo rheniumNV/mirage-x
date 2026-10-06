@@ -1,4 +1,5 @@
 export { build } from "./build.js";
+export type { BuildConfig, BuildResult } from "./build.js";
 export { generateClient } from "./generateClient.js";
 export type { GenerateFrame, MirrorUnits } from "./generateClient.js";
 export { generateSimpleFrame } from "./frame/simpleFrame/index.js";
@@ -14,6 +15,7 @@ export {
   readFeedback,
   readFeedbackIfExists,
   writeFeedback,
+  writeFeedbackIfChanged,
 } from "./feedback/index.js";
 export type {
   AttachUnitsOptions,

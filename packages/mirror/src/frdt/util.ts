@@ -59,6 +59,34 @@ export const requireReference = (slot: Slot, name: string): string => {
   return id;
 };
 
+/** Every slot under `slot`, depth first, `slot` included. */
+export const allSlots = (slot: Slot): Slot[] => [
+  slot,
+  ...slot.children().flatMap(allSlots),
+];
+
+/**
+ * Set `Value` of every dynamic value variable named `name` on the slots of
+ * `doc` that `where` accepts (all by default). Returns how many were set.
+ */
+export const setVariableValues = (
+  doc: Document,
+  name: string,
+  value: Value,
+  where: (slot: Slot) => boolean = () => true,
+): number => {
+  let count = 0;
+  for (const slot of allSlots(doc.root()).filter(where)) {
+    slot.components().forEach((_, i) => {
+      if (stringOf(slot.tryComponentValue(i, "VariableName")) === name) {
+        slot.setComponentValue(i, "Value", value);
+        count += 1;
+      }
+    });
+  }
+  return count;
+};
+
 /** Point the `DynamicReferenceVariable` named `name` at `targetId`. */
 export const setReference = (slot: Slot, name: string, targetId: string) => {
   const i = variableIndex(slot, name);
