@@ -110,8 +110,19 @@ export const build = async (
   }
 
   if (previousVersion) {
-    // Values only; ids and structure stay the same.
-    setVariableValues(output, VERSION_VARIABLE, str(newVersion));
+    // Values only; ids and structure stay the same. Only MirageX's ENV
+    // slots (frame and core), not variables of the same name in units.
+    const updated = setVariableValues(
+      output,
+      VERSION_VARIABLE,
+      str(newVersion),
+      (slot) => slot.name() === "ENV",
+    );
+    if (updated === 0) {
+      throw new Error(
+        `${VERSION_VARIABLE} not found in the ENV slots; the version cannot be updated`,
+      );
+    }
   }
 
   fs.mkdirSync(config.outputPath, { recursive: true });

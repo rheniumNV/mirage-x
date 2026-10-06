@@ -8,6 +8,7 @@ import { Document, summarize } from "@frdt/frdt";
 import { UnitProp, generateUnitConfig } from "@mirage-x/core";
 
 import { build, type BuildConfig } from "../src/build.js";
+import { addValueVariable } from "../src/frdt/util.js";
 import { generateSimpleFrame } from "../src/frame/simpleFrame/index.js";
 import { generateClient } from "../src/generateClient.js";
 import { generateMirrorUnitFromFeedback } from "../src/unit/generateMirrorUnitFromFeedback.js";
@@ -110,5 +111,30 @@ describe("build", () => {
       second.version,
       second.version,
     ]);
+  });
+
+  it("updates the version only in MirageX's ENV slots", async () => {
+    const dir = tempDir();
+    // A unit with its own variable of the same name.
+    const unitsWithOwnVersion = () => {
+      const units = unitsWith({ size: UnitProp.Float(1) });
+      const unit = units.Test.Panel;
+      addValueVariable(unit, unit.root(), "Env.Version.Current", {
+        kind: "string",
+        value: "unit-own",
+      });
+      return units;
+    };
+    await build(configFor(dir), unitsWithOwnVersion(), generateSimpleFrame);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    const second = await build(
+      configFor(dir),
+      { ...unitsWithOwnVersion(), Extra: unitsWith({}).Test },
+      generateSimpleFrame,
+    );
+    assert.equal(second.changed, true);
+    const values = versionsIn(path.join(dir, "output.brson"));
+    assert.equal(values.filter((v) => v === second.version).length, 2);
+    assert.ok(values.includes("unit-own"));
   });
 });

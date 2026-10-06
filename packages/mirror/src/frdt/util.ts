@@ -66,16 +66,17 @@ export const allSlots = (slot: Slot): Slot[] => [
 ];
 
 /**
- * Set `Value` of every dynamic value variable named `name` in `doc`.
- * Returns how many were set.
+ * Set `Value` of every dynamic value variable named `name` on the slots of
+ * `doc` that `where` accepts (all by default). Returns how many were set.
  */
 export const setVariableValues = (
   doc: Document,
   name: string,
   value: Value,
+  where: (slot: Slot) => boolean = () => true,
 ): number => {
   let count = 0;
-  for (const slot of allSlots(doc.root())) {
+  for (const slot of allSlots(doc.root()).filter(where)) {
     slot.components().forEach((_, i) => {
       if (stringOf(slot.tryComponentValue(i, "VariableName")) === name) {
         slot.setComponentValue(i, "Value", value);
