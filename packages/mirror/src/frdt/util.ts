@@ -66,6 +66,18 @@ export const allSlots = (slot: Slot): Slot[] => [
 ];
 
 /**
+ * The parent of `slot`, found from the tree (`Children`), or `undefined` for
+ * the root. `slot.parentReference()` is not used: in a file saved by
+ * Resonite, `ParentReference` is not the parent slot's id.
+ */
+export const parentOf = (doc: Document, slot: Slot): Slot | undefined => {
+  const id = slot.id();
+  return allSlots(doc.root()).find((candidate) =>
+    candidate.children().some((child) => child.id() === id),
+  );
+};
+
+/**
  * Set `Value` of every dynamic value variable named `name` on the slots of
  * `doc` that `where` accepts (all by default). Returns how many were set.
  */

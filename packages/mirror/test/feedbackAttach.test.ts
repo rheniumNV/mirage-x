@@ -20,9 +20,11 @@ import {
   allSlots,
   childNamed,
   importSlots,
+  parentOf,
   referenceOf,
   requireChild,
   requireReference,
+  setVariableValues,
   stringOf,
   str,
   bool,
@@ -40,8 +42,8 @@ const unit = (code: string) =>
   });
 
 /** What a feedback saved from a running client looks like. */
-const savedClient = (): Document =>
-  generateClient({
+const savedClient = (): Document => {
+  const doc = generateClient({
     appCode: "TestApp",
     hostCVPath: "",
     useSSLCVPath: "",
@@ -54,6 +56,10 @@ const savedClient = (): Document =>
     units: { Test: { Panel: unit("Test/Panel"), Other: unit("Test/Other") } },
     generateFrame: generateSimpleFrame,
   });
+  // Saved from a local session (the bundled assets may already be clean).
+  setVariableValues(doc, "Static.Web.Host", str("localhost:3100"));
+  return doc;
+};
 
 const META = JSON.stringify({ id: "R-1", creationTime: "2026-01-01" });
 
@@ -219,5 +225,18 @@ describe("sanitizeFeedback", () => {
     assert.deepEqual(ws.componentValue(client, "IsConnected"), bool(false));
     // Other values are left alone.
     assert.deepEqual(variableValues(doc, "Env.Version.Current"), ["1", "1"]);
+  });
+});
+
+describe("parentOf", () => {
+  it("finds the parent from the tree, not from ParentReference", () => {
+    const doc = Document.empty("Root", "2025.1.1", []);
+    const a = doc.addSlot(doc.root(), "A");
+    const b = doc.addSlot(a, "B");
+    // A file saved by Resonite: ParentReference is not the parent's id.
+    b.set("ParentReference", str("00004aa8-0000-0000-0000-000000000000"));
+    assert.equal(parentOf(doc, b)?.id(), a.id());
+    assert.equal(parentOf(doc, a)?.id(), doc.root().id());
+    assert.equal(parentOf(doc, doc.root()), undefined);
   });
 });
