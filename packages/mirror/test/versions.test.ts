@@ -4,7 +4,7 @@ import { describe, it } from "node:test";
 import { Document, type FeatureFlag } from "@frdt/frdt";
 import { UnitProp, generateUnitConfig } from "@mirage-x/core";
 
-import { partVersions } from "../src/frdt/versions.js";
+import { partVersions, typeVersionWarnings } from "../src/frdt/versions.js";
 import { generateSimpleFrame } from "../src/frame/simpleFrame/index.js";
 import { generateClient } from "../src/generateClient.js";
 import { generateMirrorUnitFromFeedback } from "../src/unit/generateMirrorUnitFromFeedback.js";
@@ -51,26 +51,6 @@ describe("partVersions", () => {
     assert.match(result.warnings[0]!, /unit 2026\.1\.2\.3, frame 2026\.9\.18\.82/);
   });
 
-  it("reports types whose TypeVersions differ", () => {
-    const withType = (label: string, typeVersion: number | null) => {
-      const p = part(label, "2026.9.18.82", flags());
-      p.doc.addComponent(p.doc.root(), "[FrooxEngine]FrooxEngine.Grabbable", typeVersion, []);
-      return p;
-    };
-    const result = partVersions([
-      withType("frame", 2),
-      withType("unit", null),
-      part("core", "2026.9.18.82", flags()),
-    ]);
-    assert.deepEqual(result.warnings, [
-      "TypeVersion of [FrooxEngine]FrooxEngine.Grabbable differs between parts: frame 2, unit 0",
-    ]);
-    assert.deepEqual(
-      partVersions([withType("frame", 2), withType("unit", 2)]).warnings,
-      [],
-    );
-  });
-
   it("is quiet when the parts agree", () => {
     const result = partVersions([
       part("frame", "2026.9.18.82", flags("A", "B")),
@@ -81,6 +61,35 @@ describe("partVersions", () => {
       featureFlags: flags("A", "B"),
       warnings: [],
     });
+  });
+});
+
+describe("typeVersionWarnings", () => {
+  const GRABBABLE = "[FrooxEngine]FrooxEngine.Grabbable";
+  const withType = (label: string, typeVersion: number | null) => {
+    const p = part(label, "2026.9.18.82", flags());
+    p.doc.addComponent(p.doc.root(), GRABBABLE, typeVersion, []);
+    return p;
+  };
+
+  it("lists the parts whose entry differs from the output's", () => {
+    const output = withType("output", 2).doc;
+    assert.deepEqual(
+      typeVersionWarnings(output, [
+        withType("core", 2),
+        withType("Test/A", null),
+        withType("Test/B", 1),
+        part("Test/C", "2026.9.18.82", flags()),
+      ]),
+      [`TypeVersion of ${GRABBABLE} is 2 in the output but differs in: Test/A 0, Test/B 1`],
+    );
+  });
+
+  it("is quiet when the entries match", () => {
+    assert.deepEqual(
+      typeVersionWarnings(withType("output", null).doc, [withType("core", null)]),
+      [],
+    );
   });
 });
 

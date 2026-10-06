@@ -16,10 +16,7 @@ export type PartVersions = {
    * parts disagree on a flag's value, the smallest.
    */
   featureFlags: FeatureFlag[];
-  /**
-   * Messages about parts that are far apart, flags that are left out or
-   * differ, and types whose `TypeVersions` differ.
-   */
+  /** Messages about parts that are far apart and flags left out or differing. */
   warnings: string[];
 };
 
@@ -95,25 +92,31 @@ export const partVersions = (parts: Part[]): PartVersions => {
       `FeatureFlag ${name} is left out because some parts do not have it: ${lacking.join(", ")}`,
     );
   }
-  // Not changed in the output (the destination's are kept on import); only
-  // reported. A type without a TypeVersions entry is at version 0.
-  const typeVersionsOf = parts.map(({ label, doc }) => ({
-    label,
-    versions: new Map(doc.types().map((t) => [t, doc.typeVersion(t) ?? 0])),
-  }));
-  const allTypes = new Set(
-    typeVersionsOf.flatMap(({ versions }) => [...versions.keys()]),
+  return { versionNumber: oldest.versionNumber, featureFlags, warnings };
+};
+
+/**
+ * Types whose `TypeVersions` entry in `parts` differs from the one written in
+ * `output`. The output keeps its own entries when parts are imported, so
+ * Resonite treats those components as saved by the output's type version.
+ * A type without an entry is at version 0.
+ */
+export const typeVersionWarnings = (output: Document, parts: Part[]): string[] => {
+  const written = new Map(
+    output.types().map((t) => [t, output.typeVersion(t) ?? 0]),
   );
-  for (const type of [...allTypes].sort()) {
-    const having = typeVersionsOf.filter(({ versions }) => versions.has(type));
-    const distinct = new Set(having.map(({ versions }) => versions.get(type)));
-    if (distinct.size > 1) {
+  const warnings: string[] = [];
+  for (const [type, version] of [...written].sort(([a], [b]) => a.localeCompare(b))) {
+    const differing = parts.flatMap(({ label, doc }) => {
+      if (!doc.types().includes(type)) return [];
+      const own = doc.typeVersion(type) ?? 0;
+      return own === version ? [] : [`${label} ${own}`];
+    });
+    if (differing.length > 0) {
       warnings.push(
-        `TypeVersion of ${type} differs between parts: ` +
-          having.map(({ label, versions }) => `${label} ${versions.get(type)}`).join(", "),
+        `TypeVersion of ${type} is ${version} in the output but differs in: ${differing.join(", ")}`,
       );
     }
   }
-
-  return { versionNumber: oldest.versionNumber, featureFlags, warnings };
+  return warnings;
 };

@@ -37,7 +37,7 @@ The output is assembled from parts saved by Resonite at different times: the cor
 
 - The output's `VersionNumber` is the oldest part's, and its `FeatureFlags` are the ones every part has. When it loads the output, Resonite then converts data saved by older versions.
 - That conversion runs on the whole output, including parts saved by newer versions. Mixing versions is therefore still a risk. Keep the parts close to each other when you can.
-- `build` warns when the parts are more than 90 days apart, when a flag is left out because some parts lack it or has different values, and when a type's `TypeVersions` differ between parts (those are not changed: the frame's are kept).
+- `build` warns when the parts are more than 90 days apart, when a flag is left out because some parts lack it or has different values, and when a part's `TypeVersions` entry for a type differs from the one written in the output (those are not changed: the entry already in the output, the frame's first, is kept).
 - A unit without feedback holds nothing saved by Resonite. It takes the core's version and does not lower the output's.
 
 ## Feedback（core / frame）
