@@ -164,7 +164,6 @@ settings:
 
 overrides:
   '@mirage-x/core': workspace:*
-  '@mirage-x/virtual-object': workspace:*
   '@mirage-x/mirror': workspace:*
 
 importers:
@@ -276,8 +275,6 @@ importers:
       tsx:
         specifier: ^4.19.4
         version: 4.23.12
-
-  packages/virtual-object: {}
 
 packages:
 
