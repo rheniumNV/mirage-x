@@ -7,7 +7,6 @@ export {
   attachInstallFrame,
 } from "./attachCoreAndFrames.js";
 export type { AttachFeedbackPaths } from "./attachCoreAndFrames.js";
-export { convertRawFeedback } from "./convertRawFeedback.js";
 export {
   readFeedback,
   readFeedbackIfExists,

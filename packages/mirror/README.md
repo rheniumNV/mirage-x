@@ -47,7 +47,8 @@ pnpm --filter @mirage-x/mirror feedback
 #   feedback:attach:frame:install     → assets/frame/installFrame/ResFeedback.brson
 ```
 
-- staging: `scripts/feedback/ResFeedbackOriginal.json`（gitignore）
+- staging: `scripts/feedback/ResFeedbackOriginal.brson`（gitignore）。Resonite から取得したバイト列をそのまま保存します
+- 取り込み時、ルートが `Holder` なら最初の子を使い、開発環境の接続先（`Static.Web.Host` などの値、`http://` / `ws://` の URL）を空にします
 - frame は `Static.FrameCode` が一致するときだけ更新（`Simple` / `InstalledAvatar`）
 - 中身が同じ（frdt `compare` で id を除いて比較）なら書き込まない（`writeFeedbackIfChanged`）
 - 部品は実行時に `assets/` から読むので、取り込んだあと mirror を再ビルドする必要はありません（空の Unit の雛形は `assets/unit/emptyFeedback.brson`）

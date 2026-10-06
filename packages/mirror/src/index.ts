@@ -11,7 +11,6 @@ export {
   attachCore,
   attachSimpleFrame,
   attachInstallFrame,
-  convertRawFeedback,
   readFeedback,
   readFeedbackIfExists,
   writeFeedback,

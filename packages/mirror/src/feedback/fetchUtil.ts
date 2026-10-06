@@ -1,5 +1,4 @@
 import axios from "axios";
-import { DeCompress } from "brson.js";
 
 export type RecordInfo = {
   id: string;
@@ -60,15 +59,17 @@ export const pickLatestObject = (
     .pop();
 };
 
-export const getJson = async (assetUri: string): Promise<string> => {
+/** The bytes of a `resdb:///<id>.brson` asset (a Resonite `.brson`). */
+export const getAsset = async (assetUri: string): Promise<Buffer> => {
   const [, assetId] = assetUri.match(/resdb:\/\/\/(.+)\.brson/) ?? [];
   if (!assetId) {
     throw new Error(`invalid asset uri: ${assetUri}`);
   }
 
-  const { data } = await axios.get(`https://assets.resonite.com/${assetId}`, {
-    responseType: "arraybuffer",
-  });
+  const { data } = await axios.get<ArrayBuffer>(
+    `https://assets.resonite.com/${assetId}`,
+    { responseType: "arraybuffer" },
+  );
 
-  return DeCompress(data);
+  return Buffer.from(data);
 };

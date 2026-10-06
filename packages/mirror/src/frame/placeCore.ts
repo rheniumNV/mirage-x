@@ -27,7 +27,8 @@ export const placeCore = (
   );
   const parent = parentOf(placeholder);
 
-  // The core still points at the frame it was saved in; rewritten below.
+  // An older core may still point at the frame it was saved in (attach now
+  // writes null there); it is rewritten below either way.
   const oldFrameRoot = referenceOf(core.root(), "Static.FrameRoot");
   const [newCore] = importSlots(frame, parent, [core.root()], {
     allowed: oldFrameRoot ? [oldFrameRoot] : [],
