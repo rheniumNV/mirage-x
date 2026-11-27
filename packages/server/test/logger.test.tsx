@@ -6,8 +6,17 @@ import { DummyReactRenderer } from "../src/server/dummyReactRenderer.js";
 import { render } from "../src/server/render.js";
 import { LogContext, Logger, useLogger } from "../src/index.js";
 
-/** Give the renderer a moment (rendering is synchronous; this is a margin). */
-const tick = () => new Promise((resolve) => setTimeout(resolve, 10));
+/**
+ * Wait until `done()` (the renderer may render later than the call, e.g.
+ * while another root's work is pending), failing after `timeoutMs`.
+ */
+const until = async (done: () => boolean, timeoutMs = 2000) => {
+  const start = Date.now();
+  while (!done()) {
+    if (Date.now() - start > timeoutMs) return;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+};
 
 describe("useLogger / LogContext", () => {
   it("gives a component the logger MirageX provides, and a child logger under LogContext", async () => {
@@ -25,7 +34,7 @@ describe("useLogger / LogContext", () => {
         </LogContext>
       </LoggerProvider>,
     );
-    await tick();
+    await until(() => seen.length >= 2);
     const app = seen.find((s) => s.where === "app")?.logger;
     const child = seen.find((s) => s.where === "child")?.logger;
     assert.equal(app, root);
@@ -52,7 +61,7 @@ describe("useLogger / LogContext", () => {
         platformApiUrl="http://127.0.0.1:9/"
       />,
     );
-    await tick();
+    await until(() => seen.length > 0);
     assert.ok(seen.length > 0, "App was not rendered");
     assert.ok(seen.every((l) => l === logger));
   });
@@ -70,7 +79,7 @@ describe("useLogger / LogContext", () => {
       return null;
     };
     DummyReactRenderer.render(<Probe />);
-    await tick();
+    await until(() => caught.length > 0);
     assert.ok(caught.length > 0, "Probe was not rendered");
     assert.ok(
       caught.every(
