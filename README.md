@@ -288,4 +288,4 @@ A trusted publisher can only be added to a package that already exists, and a ne
 
 ## Development with generative AI
 
-This project is developed with generative AI coding tools (Claude Code). Changes are reviewed and tested by the maintainer, including in Resonite.
+This project is developed with generative AI coding tools. Changes are reviewed and tested by the maintainer, including in Resonite.
