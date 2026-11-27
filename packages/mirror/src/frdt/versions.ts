@@ -122,11 +122,16 @@ export const partVersions = (
   return { versionNumber: oldest.versionNumber, featureFlags, warnings };
 };
 
-/** With `"frame"`: flags that other parts lack, have with another value, or have but the frame does not. */
+/**
+ * With `"frame"`: flags that other parts lack or have with another value,
+ * and flags other parts have but the frame does not.
+ */
 const frameFlagWarnings = (parts: Part[]): string[] => {
   const [frame, ...rest] = parts;
   if (!frame) return [];
-  const frameFlags = new Map(frame.doc.featureFlags().map((f) => [f.name, f.value]));
+  const frameFlags = new Map(
+    frame.doc.featureFlags().map((f) => [f.name, f.value]),
+  );
   const restFlags = rest.map(({ label, doc }) => ({
     label,
     flags: new Map(doc.featureFlags().map((f) => [f.name, f.value])),
@@ -145,7 +150,9 @@ const frameFlagWarnings = (parts: Part[]): string[] => {
   const others = new Set(restFlags.flatMap(({ flags }) => [...flags.keys()]));
   for (const name of others) {
     if (frameFlags.has(name)) continue;
-    const having = restFlags.filter(({ flags }) => flags.has(name)).map(({ label }) => label);
+    const having = restFlags
+      .filter(({ flags }) => flags.has(name))
+      .map(({ label }) => label);
     warnings.push(
       `FeatureFlag ${name} is left out because the ${frame.label} does not have it: ${having.join(", ")}`,
     );
