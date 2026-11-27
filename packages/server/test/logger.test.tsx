@@ -58,21 +58,24 @@ describe("useLogger / LogContext", () => {
   });
 
   it("throws outside MirageX's logger", async () => {
+    // Caught inside the component, so the test does not depend on how the
+    // renderer reports render errors.
+    const caught: unknown[] = [];
     const Probe = () => {
-      useLogger();
+      try {
+        useLogger();
+      } catch (error) {
+        caught.push(error);
+      }
       return null;
     };
-    const errors: unknown[] = [];
-    const original = console.error;
-    console.error = (error: unknown) => errors.push(error);
-    try {
-      DummyReactRenderer.render(<Probe />);
-      await tick();
-    } finally {
-      console.error = original;
-    }
+    DummyReactRenderer.render(<Probe />);
+    await tick();
+    assert.ok(caught.length > 0, "Probe was not rendered");
     assert.ok(
-      errors.some((e) => e instanceof Error && e.message === "Logger is not provided"),
+      caught.every(
+        (e) => e instanceof Error && e.message === "Logger is not provided",
+      ),
     );
   });
 });
