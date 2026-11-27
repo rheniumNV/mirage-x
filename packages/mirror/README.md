@@ -7,7 +7,7 @@ The build-time part of [MirageX](https://github.com/rheniumNV/mirage-x#readme), 
 - `build()`: assembles your Units' Resonite templates, the MirageX core and a frame into `output.brson`, the object you place in Resonite
 - `generateMirrorUnitFromFeedback`: a Unit's template, from its feedback (`ResFeedback.brson`) when there is one
 - Feedback: `fetchFeedback` and `attachUnits` pull the Units you shaped in Resonite back into your project
-- The bundled core and frames (`generateSimpleFrame`, `generateInstallFrame`)
+- The bundled core and frames (`generateSimpleFrame`, `generateInstallFrame`), and your own frames from their feedback (`generateSimpleFrameFromFeedback`, `generateInstallFrameFromFeedback`, `placeCore`)
 
 Documents are read and written with [`@frdt/frdt`](https://www.npmjs.com/package/@frdt/frdt). It does not depend on `@mirage-x/server`, so a build environment does not need the server's dependencies.
 

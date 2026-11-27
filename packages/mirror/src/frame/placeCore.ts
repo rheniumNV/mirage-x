@@ -13,19 +13,29 @@ import {
  * built core, put ENV into the frame's DV, and link the two:
  * frame `Static.AppRoot` -> core root, core `Static.FrameRoot` -> frame root.
  *
- * `parentOf(placeholder)` decides where the core goes (the placeholder's
+ * The frame needs a `Static.AppRoot` reference on its root pointing at the
+ * placeholder slot, and a `DV` child of the root (ENV goes there).
+ *
+ * `parentFor(placeholder)` decides where the core goes (the placeholder's
  * parent for the simple frame, `Static.PanelRoot` for the install frame).
+ * For the placeholder's parent, use `parentOf(frame, placeholder)` from this
+ * package: in a file saved by Resonite, `ParentReference` is not the parent's
+ * id, so `slot.parentReference()` cannot be used.
+ *
+ * `frame` is changed in place and returned. For your own frame feedback,
+ * `generateSimpleFrameFromFeedback` / `generateInstallFrameFromFeedback` do
+ * this for you.
  */
 export const placeCore = (
   frame: Document,
   { core, env }: { core: Document; env: Document },
-  parentOf: (placeholder: Slot) => Slot,
+  parentFor: (placeholder: Slot) => Slot,
 ): Document => {
   const frameRoot = frame.root();
   const placeholder = frame.slotById(
     requireReference(frameRoot, "Static.AppRoot"),
   );
-  const parent = parentOf(placeholder);
+  const parent = parentFor(placeholder);
 
   // An older core may still point at the frame it was saved in (attach now
   // writes null there); it is rewritten below either way.
