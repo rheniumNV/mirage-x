@@ -34,11 +34,11 @@ describe("useLogger / LogContext", () => {
   });
 
   it("an app rendered by MirageXServer's render() gets the logger it was given", async () => {
-    const logger = new Logger({ contextName: "render", logLevel: "error" });
+    const logger = new Logger({ contextName: "server", logLevel: "error" });
     const seen: Logger[] = [];
     const App = () => {
       seen.push(useLogger());
-      return null;
+      return <></>;
     };
     const AppRenderer = render(App, logger);
     DummyReactRenderer.render(
