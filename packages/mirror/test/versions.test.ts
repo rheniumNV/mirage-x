@@ -167,7 +167,7 @@ describe('partVersions with "frame"', () => {
     assert.equal(result.versionNumber, "2026.9.18.82");
     assert.deepEqual(result.featureFlags, flags("A", ["B", 2]));
     assert.deepEqual(result.warnings, [
-      "FeatureFlag A is the frame's (0) in the output but differs in: Test/Unit (none)",
+      "FeatureFlag A is kept from the frame but is missing in: Test/Unit",
       "FeatureFlag B is the frame's (2) in the output but differs in: core 1",
       "FeatureFlag C is left out because the frame does not have it: core",
     ]);

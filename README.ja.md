@@ -217,7 +217,7 @@ server.listen(3100);
 - 出力の `VersionNumber` は core・frame・各 Unit のうち一番古いものに合わせ、`FeatureFlags` はそのすべてが持つものだけにします。これで、Resonite は読み込み時に古いバージョンで保存されたデータを変換します。変換は出力全体にかかるので、Unit の feedback は、できるだけ同梱の core に近いバージョンの Resonite で保存してください。
 - `build` は、それらのバージョンが 90 日より離れているとき、フィーチャーフラグを外したときや値が違うとき、core や Unit の `TypeVersions` が出力と違うときに警告します。
 - feedback のない Unit は core のバージョンを使い、出力のバージョンを下げません。
-- 代わりに frame の `VersionNumber` と `FeatureFlags` をそのまま使うには、`build` の設定で `versionSource: "frame"` を指定します（既定は `"oldest"`）。この場合、core や Unit にある古いバージョンの Resonite で保存されたデータは変換されません。`build` は、frame と違うフラグについて警告します。バージョンが 90 日より離れているときの警告も出ます。
+- 代わりに frame の `VersionNumber` と `FeatureFlags` をそのまま使うには、`build` の設定で `versionSource: "frame"` を指定します（既定は `"oldest"`）。この場合、core や Unit にある古いバージョンの Resonite で保存されたデータは変換されません。`build` は、frame と違うフラグについて警告します。バージョンが 90 日より離れているときと、`TypeVersions` が違うときの警告も出ます。
 
 ## サンプル
 

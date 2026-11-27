@@ -138,9 +138,17 @@ const frameFlagWarnings = (parts: Part[]): string[] => {
   }));
   const warnings: string[] = [];
   for (const [name, value] of frameFlags) {
+    const missing = restFlags
+      .filter(({ flags }) => !flags.has(name))
+      .map(({ label }) => label);
     const differing = restFlags
-      .filter(({ flags }) => flags.get(name) !== value)
-      .map(({ label, flags }) => `${label} ${flags.get(name) ?? "(none)"}`);
+      .filter(({ flags }) => flags.has(name) && flags.get(name) !== value)
+      .map(({ label, flags }) => `${label} ${flags.get(name)}`);
+    if (missing.length > 0) {
+      warnings.push(
+        `FeatureFlag ${name} is kept from the ${frame.label} but is missing in: ${missing.join(", ")}`,
+      );
+    }
     if (differing.length > 0) {
       warnings.push(
         `FeatureFlag ${name} is the ${frame.label}'s (${value}) in the output but differs in: ${differing.join(", ")}`,
