@@ -42,12 +42,12 @@ Resonite の UI（やオブジェクトのツリー）を、Node.js のサーバ
 ## インストール
 
 ```bash
-pnpm add @mirage-x/core @mirage-x/server @mirage-x/mirror react@18
+pnpm add @mirage-x/core @mirage-x/server @mirage-x/mirror react@19
 # または
-npm install @mirage-x/core @mirage-x/server @mirage-x/mirror react@18
+npm install @mirage-x/core @mirage-x/server @mirage-x/mirror react@19
 ```
 
-Node.js 22 以上が必要です。ESM のみです（`"type": "module"`）。`react` 18 は `@mirage-x/server` の peerDependency です。コンポーネントとランタイムが同じ React を使う必要があるためです。3 つのパッケージは一緒にリリースするので、バージョンを揃えてください。
+Node.js 22 以上が必要です。ESM のみです（`"type": "module"`）。`react` 19（19.3 以降）は `@mirage-x/server` の peerDependency です。コンポーネントとランタイムが同じ React を使う必要があるためです。3 つのパッケージは一緒にリリースするので、バージョンを揃えてください。
 
 ## クイックスタート
 

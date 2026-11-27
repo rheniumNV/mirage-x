@@ -16,7 +16,7 @@ First release.
   - `generateMain`: a Unit as a React component
   - Hooks: `useMirrorRef`, `useBoundCallback`, `useMainRootContext`
   - `Logger`
-  - `react` 18 is a peer dependency.
+  - `react` 19 (19.3 or later) is a peer dependency.
 - `@mirage-x/mirror`: the build time.
   - `build()`: assembles the Units' templates, the bundled core and a frame (`generateSimpleFrame` / `generateInstallFrame`) into `output.brson`, using [`@frdt/frdt`](https://www.npmjs.com/package/@frdt/frdt). Ids are renumbered from a fixed seed, and an unchanged output is not rewritten.
   - `generateMirrorUnitFromFeedback`: a Unit's template, from its feedback (`ResFeedback.brson`, as saved by Resonite) when there is one.

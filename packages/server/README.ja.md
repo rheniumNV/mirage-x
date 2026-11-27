@@ -9,12 +9,12 @@
 - フック: `useMirrorRef`、`useBoundCallback`、`useMainRootContext`
 - `Logger`
 
-`react` 18 は peerDependency です。コンポーネントとランタイムが同じ React を使う必要があるためです。
+`react` 19（19.3 以降）は peerDependency です。コンポーネントとランタイムが同じ React を使う必要があるためです。
 
 MirageX は 3 つのパッケージで公開していて、一緒に使います。[`@mirage-x/core`](https://www.npmjs.com/package/@mirage-x/core)（共有する Unit の定義）、[`@mirage-x/server`](https://www.npmjs.com/package/@mirage-x/server)（実行時）、[`@mirage-x/mirror`](https://www.npmjs.com/package/@mirage-x/mirror)（ビルド時）です。**使い方は [MirageX の README](https://github.com/rheniumNV/mirage-x/blob/master/README.ja.md) を見てください**。完成したアプリの例は [`examples/basic`](https://github.com/rheniumNV/mirage-x/tree/master/examples/basic) にあります。
 
 ```bash
-npm install @mirage-x/core @mirage-x/server @mirage-x/mirror react@18
+npm install @mirage-x/core @mirage-x/server @mirage-x/mirror react@19
 ```
 
 Node.js 22 以上、ESM のみです。3 つのパッケージはバージョンを揃えてください。

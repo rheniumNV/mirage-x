@@ -42,12 +42,12 @@ An app uses all three: each Unit's `detail.ts` imports `@mirage-x/core`, its `ma
 ## Install
 
 ```bash
-pnpm add @mirage-x/core @mirage-x/server @mirage-x/mirror react@18
+pnpm add @mirage-x/core @mirage-x/server @mirage-x/mirror react@19
 # or
-npm install @mirage-x/core @mirage-x/server @mirage-x/mirror react@18
+npm install @mirage-x/core @mirage-x/server @mirage-x/mirror react@19
 ```
 
-Requires Node.js 22 or later. ESM only (`"type": "module"`). `react` 18 is a peer dependency of `@mirage-x/server`: your components and the runtime must share one React. The three packages are released together; keep them at the same version.
+Requires Node.js 22 or later. ESM only (`"type": "module"`). `react` 19 (19.3 or later) is a peer dependency of `@mirage-x/server`: your components and the runtime must share one React. The three packages are released together; keep them at the same version.
 
 ## Quick start
 

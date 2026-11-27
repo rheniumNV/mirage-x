@@ -41,7 +41,7 @@
     "test": "tsx --tsconfig tsconfig.test.json --test \"test/**/*.test.ts\""
   },
   "dependencies": {
-    "@types/react": "^18.3.3"
+    "@types/react": "^19.3.3"
   },
   "devDependencies": {
     "tsx": "^4.23.12"
