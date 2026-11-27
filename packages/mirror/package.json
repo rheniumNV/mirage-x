@@ -1,11 +1,32 @@
 {
   "name": "@mirage-x/mirror",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "MirageX Resonite asset mirror builder (output.brson pipeline)",
+  "keywords": [
+    "resonite",
+    "react",
+    "mirage-x"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rheniumNV/mirage-x.git",
+    "directory": "packages/mirror"
+  },
+  "homepage": "https://github.com/rheniumNV/mirage-x/tree/master/packages/mirror#readme",
+  "bugs": {
+    "url": "https://github.com/rheniumNV/mirage-x/issues"
+  },
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "files": [
     "dist",
-    "assets/**/*.brson"
+    "assets/**/*.brson",
+    "README.md",
+    "README.ja.md",
+    "LICENSE"
   ],
   "exports": {
     ".": {
@@ -28,13 +49,12 @@
   "dependencies": {
     "@frdt/frdt": "^0.2.4",
     "@mirage-x/core": "workspace:^",
-    "axios": "^1.7.7"
+    "axios": "^1.21.1"
   },
   "devDependencies": {
     "tsx": "^4.19.4"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "license": "MIT"
+  }
 }

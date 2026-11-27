@@ -1,0 +1,83 @@
+name: Release
+
+# Publish @mirage-x/core, @mirage-x/server and @mirage-x/mirror to npm when a
+# version tag (v0.1.0, ...) is pushed. The tag must match every package's version.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  # npm trusted publishing (OIDC) and provenance.
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing (OIDC) needs npm 11.5.1 or later; Node 22 ships npm 10.
+      - name: Update npm
+        run: npm install -g npm@11
+
+      - name: Check the tag matches the package versions
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          for pkg in packages/core packages/server packages/mirror; do
+            version="$(node -p "require('./$pkg/package.json').version")"
+            if [ "$version" != "$tag" ]; then
+              echo "::error::$pkg is $version, but the tag is $GITHUB_REF_NAME"
+              exit 1
+            fi
+          done
+          if ! grep -q "version = \"$tag\"" packages/core/src/version.ts; then
+            echo "::error::packages/core/src/version.ts does not say $tag"
+            exit 1
+          fi
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+      - name: Test
+        run: pnpm -r --if-present test
+
+      # `pnpm pack` turns `workspace:^` into the real version range, so the
+      # tarballs install with npm as well as pnpm.
+      - name: Pack
+        run: |
+          mkdir -p "$RUNNER_TEMP/pack"
+          for pkg in packages/core packages/server packages/mirror; do
+            (cd "$pkg" && pnpm pack --pack-destination "$RUNNER_TEMP/pack")
+          done
+          ls -l "$RUNNER_TEMP/pack"
+
+      # core first: server and mirror depend on it. A version already on npm (e.g.
+      # published by hand) is skipped, so pushing its tag does not fail.
+      # Authenticates with npm trusted publishing (OIDC): each package lists
+      # this workflow as its trusted publisher on npmjs.com. No token is used.
+      - name: Publish
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          for name in core server mirror; do
+            if [ "$(npm view "@mirage-x/$name@$version" version 2>/dev/null)" = "$version" ]; then
+              echo "@mirage-x/$name@$version is already on npm; skipped"
+              continue
+            fi
+            npm publish "$RUNNER_TEMP/pack/mirage-x-$name-$version.tgz" --access public --provenance
+          done

@@ -7,18 +7,16 @@ import {
   type ReactNode,
 } from "react";
 import { randomUUID } from "node:crypto";
-import { useMainRootContext } from "../../main/index.js";
+import { useMainRootContext } from "../main/index.js";
 import {
   isMirrorRef,
-  useMirrorRefSnapshot,
+  type DetailBase,
   type MirrorRef,
   type MirrorRefBindMeta,
-} from "../../common/useMirrorRef.js";
-import {
-  type DetailBase,
   type UnitConfig,
   type getMainProps,
-} from "../common/index.js";
+} from "@mirage-x/core";
+import { useMirrorRefSnapshot } from "../hooks/useMirrorRef.js";
 
 export const UnitContext = createContext<{ id: string }>({ id: "root" });
 

@@ -1,31 +1,29 @@
+[English](https://github.com/rheniumNV/mirage-x/blob/master/packages/core/README.md) | [日本語](https://github.com/rheniumNV/mirage-x/blob/master/packages/core/README.ja.md)
+
 # @mirage-x/core
 
-MirageX React runtime for Resonite UIX apps.
+The shared part of [MirageX](https://github.com/rheniumNV/mirage-x#readme), a server-side React framework that syncs a Unit tree to a Resonite-side mirror over WebSocket.
 
-## Install
+It holds what the run time and the build time both use:
+
+- Unit definitions: `generateUnitConfig`, `UnitProp`, `UnitRef` and their types (`DetailBase`, `UnitConfig`, `getMainProps` …)
+- `MirrorRef` (`createMirrorRef`, `isMirrorRef`) and `FunctionEnv`
+- The types of the sync protocol between the server and the mirror
+
+It has no runtime dependencies. Slot references are described in [docs/reference-prop.md](https://github.com/rheniumNV/mirage-x/blob/master/packages/core/docs/reference-prop.md).
+
+MirageX is published as three packages, used together: [`@mirage-x/core`](https://www.npmjs.com/package/@mirage-x/core) (shared Unit definitions), [`@mirage-x/server`](https://www.npmjs.com/package/@mirage-x/server) (run time) and [`@mirage-x/mirror`](https://www.npmjs.com/package/@mirage-x/mirror) (build time). **See the [MirageX README](https://github.com/rheniumNV/mirage-x#readme) for how to use them**, and [`examples/basic`](https://github.com/rheniumNV/mirage-x/tree/master/examples/basic) for a complete app.
 
 ```bash
-pnpm add @mirage-x/core
+npm install @mirage-x/core @mirage-x/server @mirage-x/mirror react@19
 ```
 
-## Exports
+Node.js 22 or later, ESM only. Keep the three packages at the same version.
 
-| Entry | Contents |
-| --- | --- |
-| `@mirage-x/core` | App APIs: `generateMain`, `UnitProp`, `UnitRef`, `generateUnitConfig`, `FunctionEnv`, `useBoundCallback`, `useMirrorRef`, `noop`, `useMainRootContext`, `Logger`, `version` |
-| `@mirage-x/core/server` | `MirageXServer` (+ config types) |
+## License
 
-## Slot references
+MIT
 
-- Every Unit: `rootSlotRef` → wire `option: { refType: "RootSlot" }`
-- `refsConfig` + `UnitRef.Slot()` → `DV/Refs.*` and wire `option: { refType: "Slot", refKey }`
-- Consumer: `UnitProp.Slot()` → `Props.*` DRV
+## Development with generative AI
 
-See [docs/reference-prop.md](docs/reference-prop.md).
-
-## Notes
-
-- ESM only (`"type": "module"`).
-- Only the `sync` protocol is supported. The client's `init` may send `eventType: "sync"` or omit it; any other value (the removed `tree` mode) is rejected and the socket is closed.
-- No dependency on `@uni-pocket/*`; `Logger` lives in this package.
-- Unit/res mirror tooling, client attach scripts, and web preview from UniPocket MirageX are intentionally omitted.
+This project is developed with generative AI coding tools. Changes are reviewed and tested by the maintainer, including in Resonite.

@@ -165,6 +165,7 @@ settings:
 overrides:
   '@mirage-x/core': workspace:*
   '@mirage-x/mirror': workspace:*
+  '@mirage-x/server': workspace:*
 
 importers:
 
@@ -185,14 +186,17 @@ importers:
       '@mirage-x/mirror':
         specifier: workspace:*
         version: link:../../packages/mirror
+      '@mirage-x/server':
+        specifier: workspace:*
+        version: link:../../packages/server
       express:
-        specifier: ^4.19.2
-        version: 4.22.2
+        specifier: ^4.22.3
+        version: 4.22.3
       react:
-        specifier: ^18.3.1
-        version: 18.3.1
+        specifier: ^19.3.1
+        version: 19.3.1
       ws:
-        specifier: ^8.17.0
+        specifier: ^8.17.1
         version: 8.21.3
     devDependencies:
       '@types/express':
@@ -202,8 +206,8 @@ importers:
         specifier: ^22.15.21
         version: 22.20.1
       '@types/react':
-        specifier: ^18.3.3
-        version: 18.3.31
+        specifier: ^19.3.3
+        version: 19.3.3
       '@types/ws':
         specifier: ^8.5.10
         version: 8.18.1
@@ -216,45 +220,9 @@ importers:
 
   packages/core:
     dependencies:
-      '@types/cors':
-        specifier: ^2.8.17
-        version: 2.8.19
-      '@types/express':
-        specifier: ^4.17.21
-        version: 4.17.25
       '@types/react':
-        specifier: ^18.3.3
-        version: 18.3.31
-      '@types/react-reconciler':
-        specifier: ^0.28.8
-        version: 0.28.9(@types/react@18.3.31)
-      '@types/ws':
-        specifier: ^8.5.10
-        version: 8.18.1
-      axios:
-        specifier: ^1.7.2
-        version: 1.19.0(debug@4.4.3)
-      cors:
-        specifier: ^2.8.5
-        version: 2.8.6
-      express:
-        specifier: ^4.19.2
-        version: 4.22.2
-      jose:
-        specifier: ^5.6.3
-        version: 5.10.0
-      json2emap:
-        specifier: ^1.0.0
-        version: 1.0.0
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-reconciler:
-        specifier: ^0.29.2
-        version: 0.29.2(react@18.3.1)
-      ws:
-        specifier: ^8.17.0
-        version: 8.21.3
+        specifier: ^19.3.3
+        version: 19.3.3
     devDependencies:
       tsx:
         specifier: ^4.23.12
@@ -269,11 +237,60 @@ importers:
         specifier: workspace:*
         version: link:../core
       axios:
-        specifier: ^1.7.7
-        version: 1.19.0(debug@4.4.3)
+        specifier: ^1.21.1
+        version: 1.21.1(debug@4.4.3)
     devDependencies:
       tsx:
         specifier: ^4.19.4
+        version: 4.23.12
+
+  packages/server:
+    dependencies:
+      '@mirage-x/core':
+        specifier: workspace:*
+        version: link:../core
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.25
+      '@types/react':
+        specifier: ^19.3.3
+        version: 19.3.3
+      '@types/ws':
+        specifier: ^8.5.10
+        version: 8.18.1
+      axios:
+        specifier: ^1.21.1
+        version: 1.21.1(debug@4.4.3)
+      cors:
+        specifier: ^2.8.5
+        version: 2.8.6
+      express:
+        specifier: ^4.22.3
+        version: 4.22.3
+      jose:
+        specifier: ^5.6.3
+        version: 5.10.0
+      json2emap:
+        specifier: ^1.0.0
+        version: 1.0.0
+      react-reconciler:
+        specifier: ^0.34.0
+        version: 0.34.0(react@19.3.1)
+      ws:
+        specifier: ^8.17.1
+        version: 8.21.3
+    devDependencies:
+      '@types/cors':
+        specifier: ^2.8.17
+        version: 2.8.19
+      '@types/react-reconciler':
+        specifier: ^0.34.1
+        version: 0.34.1(@types/react@19.3.3)
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+      tsx:
+        specifier: ^4.23.12
         version: 4.23.12
 
 packages:
@@ -507,22 +524,19 @@ packages:
   '@types/node@22.20.1':
     resolution: {integrity: sha512-EANqOCF9QFyra+4pfxUcX9STKJpCLjMbObVzljIJomAWSnuSIEAvyzEU53GaajbXJEgdh0iEcPL+DGvpUd4k1Q==}
 
-  '@types/prop-types@15.7.15':
-    resolution: {integrity: sha512-F6bEyamV9jKGAFBEmlQnesRPGOQqS2+Uwi0Em15xenOxHaf2hv6L8YCVn3rPdPJOiJfPiCnLIRyvwVaqMY3MIw==}
-
   '@types/qs@6.15.1':
     resolution: {integrity: sha512-GZHUBZR9hckSUhrxmp1nG6NwdpM9fCunJwyThLW1X3AyHgd9IlHb6VANpQQqDr2o/qQp6McZ3y/IA2rVzKzSbw==}
 
   '@types/range-parser@1.2.7':
     resolution: {integrity: sha512-hKormJbkJqzQGhziax5PItDUTMAM9uE2XXQmM37dyd4hVM+5aVl7oVxMVUiVQn2oCQFN/LKCZdvSM0pFRqbSmQ==}
 
-  '@types/react-reconciler@0.28.9':
-    resolution: {integrity: sha512-HHM3nxyUZ3zAylX8ZEyrDNd2XZOnQ0D5XfunJF5FLQnZbHHYq4UWvW1QfelQNXv1ICNkwYhfxjwfnqivYB6bFg==}
+  '@types/react-reconciler@0.34.1':
+    resolution: {integrity: sha512-XAzeH3rARrfApMETpkcFmfJQRS3rPpXsSR/XA8H3sV8WgA0bp6UE7sLNM92l1ZbCclUKmrH28Ik2fSejh9UxRg==}
     peerDependencies:
       '@types/react': '*'
 
-  '@types/react@18.3.31':
-    resolution: {integrity: sha512-vfEqpXTvwT91yhmwdfouStN2hSKwTvyRs8qpLfADyrq/kxDw0hZM7Wk9Ug1FELj8hIby+S/+kQCSRFF32nv2Qw==}
+  '@types/react@19.3.3':
+    resolution: {integrity: sha512-K8uWpJc4teiuOPdiP1umjeA9rGMgVPiXuoL66fcS1QlwBT1WMqY8PORmub9FadopIs+RCW6siYEs7Lpq+vDlog==}
 
   '@types/send@0.17.6':
     resolution: {integrity: sha512-Uqt8rPBE8SY0RK8JB1EzVOIZ32uqy8HwdxCnoCOsYrvnswqmFZ/k+9Ikidlk/ImhsdvBsloHbAlewb2IEBV/Og==}
@@ -550,11 +564,11 @@ packages:
   asynckit@0.4.0:
     resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
 
-  axios@1.19.0:
-    resolution: {integrity: sha512-ht/iuYZXEjFxLH/Hkezgd7m6JKlHHXEUSneaDz8uZe1Gj5QZtCnpyDsckvAiEnT89OEbCLmnte4R4sn7P0EKFw==}
+  axios@1.21.1:
+    resolution: {integrity: sha512-6eI5Q/Y4u/Um9dDlsRoq5pY2rxnUTv+L4PpLitnbk/i4jb3MxLZ5CsN5Ih3IysbeRYK4pR+P7qfMsOQl9fwwFQ==}
 
-  body-parser@1.20.6:
-    resolution: {integrity: sha512-p5tAzS57i5MV9fZFDj9LeIiTZEufbSe2eDozP+ElheSUq1m74CRq1jI4mYNDdVs9vQztXFLuk/Gd6BWTdwRJ5g==}
+  body-parser@1.20.9:
+    resolution: {integrity: sha512-FISIQxV5u91Y9gvuFq3q/tA/qTqLJn3AhRcEvyozyhJTh5OBFFtv827AdHU7Rbyct4r+Ba1/99oFa1Y3yuFsdw==}
     engines: {node: '>= 0.8', npm: 1.2.8000 || >= 1.4.16}
 
   bytes@3.1.2:
@@ -663,16 +677,16 @@ packages:
     resolution: {integrity: sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==}
     engines: {node: '>= 0.6'}
 
-  express@4.22.2:
-    resolution: {integrity: sha512-IuL+Elrou2ZvCFHs18/CIzy2Nzvo25nZ1/D2eIZlz7c+QUayAcYoiM2BthCjs+EBHVpjYjcuLDAiCWgeIX3X1Q==}
+  express@4.22.3:
+    resolution: {integrity: sha512-Bdcs4+3qlpVlx2NRn6fgX2Ue2/gGRaPeawebgclM0ERSCqDpA+owF1fdPwjJUTAJWMTuAaxjDf+hzb0/4eKvvw==}
     engines: {node: '>= 0.10.0'}
 
   finalhandler@1.3.2:
     resolution: {integrity: sha512-aA4RyPcd3badbdABGDuTXCMTtOneUCAYH/gxoYRTZlIJdF0YPWuGqiAsIrhNnnqdXGswYk6dGujem4w80UJFhg==}
     engines: {node: '>= 0.8'}
 
-  follow-redirects@1.16.0:
-    resolution: {integrity: sha512-y5rN/uOsadFT/JfYwhxRS5R7Qce+g3zG97+JrtFZlC9klX/W5hD7iiLzScI4nZqUS7DNUdhPgw4xI8W2LuXlUw==}
+  follow-redirects@1.16.3:
+    resolution: {integrity: sha512-toOSoqN6d51Wjf1aOFJYcoVv1aND9rj/CwjLU0Vz40oDuSpWDayCeKe4JpL5NL0WdFvoOOCI3BRo69HahjbR1A==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -746,16 +760,9 @@ packages:
   jose@5.10.0:
     resolution: {integrity: sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg==}
 
-  js-tokens@4.0.0:
-    resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
-
   json2emap@1.0.0:
     resolution: {integrity: sha512-v8pmqas9Pl/A9drw1Fh6c+d8HDF2ZixyciY5E0W8WdcxMIIkUWLvgmu42IIztAA64Lj/kJMjBRG/hE9llxtCBw==}
     engines: {node: '>=14'}
-
-  loose-envify@1.4.0:
-    resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
-    hasBin: true
 
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
@@ -814,16 +821,16 @@ packages:
   path-to-regexp@0.1.13:
     resolution: {integrity: sha512-A/AGNMFN3c8bOlvV9RreMdrv7jsmF9XIfDeCd87+I8RNg6s78BhJxMu69NEMHBSJFxKidViTEdruRwEk/WIKqA==}
 
-  proxy-addr@2.0.7:
-    resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
+  proxy-addr@2.0.8:
+    resolution: {integrity: sha512-5nnx0yGyVUcY6t9RnWcARWtwT9F1D8O9rt08htPvnd49W1IgZtmLkhu9WfMzQj1cFxjHIO6connUNVW5k7AVyQ==}
     engines: {node: '>= 0.10'}
 
   proxy-from-env@2.1.0:
     resolution: {integrity: sha512-cJ+oHTW1VAEa8cJslgmUZrc+sjRKgAKl3Zyse6+PV38hZe/V6Z14TbCuXcan9F9ghlz4QrFr2c92TNF82UkYHA==}
     engines: {node: '>=10'}
 
-  qs@6.15.3:
-    resolution: {integrity: sha512-O9gl3zCl5h5blw1KGUzQKhA5oUXSl8rwUIM5o0S3nCXMliSvy5Dzx7/DJcI+SwgICv+IneSZwhBh1oSyEHA71A==}
+  qs@6.16.2:
+    resolution: {integrity: sha512-VYdnB5S7/0IeXzBacUtwNAaM6d7Y/PgYnNC7bJCI6meqA/OgnsQbZMtVW8Dt2D1PHgbHGtYmhSoEIgvt7xZ2ZA==}
     engines: {node: '>=0.6'}
 
   range-parser@1.2.1:
@@ -834,14 +841,14 @@ packages:
     resolution: {integrity: sha512-s4VSOf6yN0rvbRZGxs8Om5CWj6seneMwK3oDb4lWDH0UPhWcxwOWw5+qk24bxq87szX1ydrwylIOp2uG1ojUpA==}
     engines: {node: '>= 0.8'}
 
-  react-reconciler@0.29.2:
-    resolution: {integrity: sha512-zZQqIiYgDCTP/f1N/mAR10nJGrPD2ZR+jDSEsKWJHYC7Cm2wodlwbR3upZRdC3cjIjSlTLNVyO7Iu0Yy7t2AYg==}
+  react-reconciler@0.34.0:
+    resolution: {integrity: sha512-eVibvB1fc9j5Qf1KRkiM3GzRPBdjg2P6G6QV2f3P6Eb3OGMxRBhdg2rrUwjbV5JrQaJj8nOa8uajmmJA5tJWjQ==}
     engines: {node: '>=0.10.0'}
     peerDependencies:
-      react: ^18.3.1
+      react: ^19.3.0
 
-  react@18.3.1:
-    resolution: {integrity: sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==}
+  react@19.3.1:
+    resolution: {integrity: sha512-QNhWdt7nrgVWWQG58QuGsAR3jv3Hbe4mb4vz7w2csnHavciZJgda1CPNaldF6eVxv90ud3jUXpKlHL69gO38yw==}
     engines: {node: '>=0.10.0'}
 
   safe-buffer@5.2.1:
@@ -850,8 +857,8 @@ packages:
   safer-buffer@2.1.2:
     resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
 
-  scheduler@0.23.2:
-    resolution: {integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==}
+  scheduler@0.28.0:
+    resolution: {integrity: sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw==}
 
   send@0.19.2:
     resolution: {integrity: sha512-VMbMxbDeehAxpOtWJXlcUS5E8iXh6QmN+BkRX1GARS3wRaXEEgzCcB10gTQazO42tpNIya8xIyNx8fll1OFPrg==}
@@ -1093,19 +1100,16 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
-  '@types/prop-types@15.7.15': {}
-
   '@types/qs@6.15.1': {}
 
   '@types/range-parser@1.2.7': {}
 
-  '@types/react-reconciler@0.28.9(@types/react@18.3.31)':
+  '@types/react-reconciler@0.34.1(@types/react@19.3.3)':
     dependencies:
-      '@types/react': 18.3.31
+      '@types/react': 19.3.3
 
-  '@types/react@18.3.31':
+  '@types/react@19.3.3':
     dependencies:
-      '@types/prop-types': 15.7.15
       csstype: 3.2.3
 
   '@types/send@0.17.6':
@@ -1142,9 +1146,9 @@ snapshots:
 
   asynckit@0.4.0: {}
 
-  axios@1.19.0(debug@4.4.3):
+  axios@1.21.1(debug@4.4.3):
     dependencies:
-      follow-redirects: 1.16.0(debug@4.4.3)
+      follow-redirects: 1.16.3(debug@4.4.3)
       form-data: 4.0.6
       https-proxy-agent: 5.0.1
       proxy-from-env: 2.1.0
@@ -1152,7 +1156,7 @@ snapshots:
       - debug
       - supports-color
 
-  body-parser@1.20.6:
+  body-parser@1.20.9:
     dependencies:
       bytes: 3.1.2
       content-type: 1.0.5
@@ -1162,7 +1166,7 @@ snapshots:
       http-errors: 2.0.1
       iconv-lite: 0.4.24
       on-finished: 2.4.1
-      qs: 6.15.3
+      qs: 6.16.2
       raw-body: 2.5.3
       type-is: 1.6.18
       unpipe: 1.0.0
@@ -1274,11 +1278,11 @@ snapshots:
 
   etag@1.8.1: {}
 
-  express@4.22.2:
+  express@4.22.3:
     dependencies:
       accepts: 1.3.8
       array-flatten: 1.1.1
-      body-parser: 1.20.6
+      body-parser: 1.20.9
       content-disposition: 0.5.4
       content-type: 1.0.5
       cookie: 0.7.2
@@ -1296,8 +1300,8 @@ snapshots:
       on-finished: 2.4.1
       parseurl: 1.3.3
       path-to-regexp: 0.1.13
-      proxy-addr: 2.0.7
-      qs: 6.15.3
+      proxy-addr: 2.0.8
+      qs: 6.16.2
       range-parser: 1.2.1
       safe-buffer: 5.2.1
       send: 0.19.2
@@ -1322,7 +1326,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  follow-redirects@1.16.0(debug@4.4.3):
+  follow-redirects@1.16.3(debug@4.4.3):
     optionalDependencies:
       debug: 4.4.3
 
@@ -1398,13 +1402,7 @@ snapshots:
 
   jose@5.10.0: {}
 
-  js-tokens@4.0.0: {}
-
   json2emap@1.0.0: {}
-
-  loose-envify@1.4.0:
-    dependencies:
-      js-tokens: 4.0.0
 
   math-intrinsics@1.1.0: {}
 
@@ -1440,14 +1438,14 @@ snapshots:
 
   path-to-regexp@0.1.13: {}
 
-  proxy-addr@2.0.7:
+  proxy-addr@2.0.8:
     dependencies:
       forwarded: 0.2.0
       ipaddr.js: 1.9.1
 
   proxy-from-env@2.1.0: {}
 
-  qs@6.15.3:
+  qs@6.16.2:
     dependencies:
       es-define-property: 1.0.1
       side-channel: 1.1.1
@@ -1461,23 +1459,18 @@ snapshots:
       iconv-lite: 0.4.24
       unpipe: 1.0.0
 
-  react-reconciler@0.29.2(react@18.3.1):
+  react-reconciler@0.34.0(react@19.3.1):
     dependencies:
-      loose-envify: 1.4.0
-      react: 18.3.1
-      scheduler: 0.23.2
+      react: 19.3.1
+      scheduler: 0.28.0
 
-  react@18.3.1:
-    dependencies:
-      loose-envify: 1.4.0
+  react@19.3.1: {}
 
   safe-buffer@5.2.1: {}
 
   safer-buffer@2.1.2: {}
 
-  scheduler@0.23.2:
-    dependencies:
-      loose-envify: 1.4.0
+  scheduler@0.28.0: {}
 
   send@0.19.2:
     dependencies:

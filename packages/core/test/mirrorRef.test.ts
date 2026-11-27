@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { createMirrorRef, isMirrorRef } from "../src/common/useMirrorRef.js";
+import { createMirrorRef, isMirrorRef } from "../src/common/mirrorRef.js";
 
 describe("MirrorRef", () => {
   it("starts unbound as RootSlot", () => {

@@ -1,0 +1,67 @@
+{
+  "name": "@mirage-x/server",
+  "version": "0.1.0",
+  "description": "MirageX run time: renders a React app on the server and syncs its Units to the mirror in Resonite",
+  "keywords": [
+    "resonite",
+    "react",
+    "mirage-x"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rheniumNV/mirage-x.git",
+    "directory": "packages/server"
+  },
+  "homepage": "https://github.com/rheniumNV/mirage-x/tree/master/packages/server#readme",
+  "bugs": {
+    "url": "https://github.com/rheniumNV/mirage-x/issues"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "README.ja.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
+    "test": "tsx --tsconfig tsconfig.test.json --test \"test/**/*.test.{ts,tsx}\""
+  },
+  "peerDependencies": {
+    "react": "^19.3.0"
+  },
+  "dependencies": {
+    "@mirage-x/core": "workspace:^",
+    "@types/express": "^4.17.21",
+    "@types/react": "^19.3.3",
+    "@types/ws": "^8.5.10",
+    "axios": "^1.21.1",
+    "cors": "^2.8.5",
+    "express": "^4.22.3",
+    "jose": "^5.6.3",
+    "json2emap": "^1.0.0",
+    "react-reconciler": "^0.34.0",
+    "ws": "^8.17.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/react-reconciler": "^0.34.1",
+    "react": "^19.3.1",
+    "tsx": "^4.23.12"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

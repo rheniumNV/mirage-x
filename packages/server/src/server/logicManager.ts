@@ -5,7 +5,7 @@ import type { Logger } from "../logger/index.js";
 import type {
   UnitChangeClientEvent,
   UnitChangeServerEvent,
-} from "../common/unitChangeEvent.js";
+} from "@mirage-x/core";
 import type { Authentication } from "../main/index.js";
 import type { MainRootProps } from "../main/mainRootProps.js";
 import { DummyReactRenderer } from "./dummyReactRenderer.js";

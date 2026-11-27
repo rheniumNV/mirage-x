@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import type * as MainProp from "../../common/mainProp.js";
-import type { MirrorRef } from "../../common/mirrorRef.js";
+import type * as MainProp from "../common/mainProp.js";
+import type { MirrorRef } from "../common/mirrorRef.js";
 import type { RefConfig } from "./unitRef.js";
 
 export * as UnitProp from "./unitProp.js";

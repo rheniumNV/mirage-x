@@ -1,8 +1,7 @@
 import http from "node:http";
 import path from "node:path";
 
-import { Logger } from "@mirage-x/core";
-import { MirageXServer } from "@mirage-x/core/server";
+import { Logger, MirageXServer } from "@mirage-x/server";
 import express from "express";
 import { WebSocketServer } from "ws";
 

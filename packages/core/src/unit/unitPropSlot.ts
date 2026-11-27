@@ -1,5 +1,5 @@
-import type * as MainProp from "../../common/mainProp.js";
-import type { MirrorRef } from "../../common/mirrorRef.js";
+import type * as MainProp from "../common/mainProp.js";
+import type { MirrorRef } from "../common/mirrorRef.js";
 
 type Option = { dvMode: MainProp.DvMode };
 

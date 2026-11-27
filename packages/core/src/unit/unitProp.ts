@@ -1,4 +1,4 @@
-import type * as MainProp from "../../common/mainProp.js";
+import type * as MainProp from "../common/mainProp.js";
 
 type Option = { dvMode: MainProp.DvMode };
 
