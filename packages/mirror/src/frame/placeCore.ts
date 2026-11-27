@@ -15,6 +15,13 @@ import {
  *
  * `parentOf(placeholder)` decides where the core goes (the placeholder's
  * parent for the simple frame, `Static.PanelRoot` for the install frame).
+ * For the placeholder's parent, use `parentOf(frame, placeholder)` from this
+ * package: in a file saved by Resonite, `ParentReference` is not the parent's
+ * id, so `slot.parentReference()` cannot be used.
+ *
+ * `frame` is changed in place and returned. For your own frame feedback,
+ * `generateSimpleFrameFromFeedback` / `generateInstallFrameFromFeedback` do
+ * this for you.
  */
 export const placeCore = (
   frame: Document,
