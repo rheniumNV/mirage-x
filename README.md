@@ -279,7 +279,15 @@ Work goes into `develop` through pull requests (open them against `develop`, not
 All three packages are released together with the same version.
 
 1. On `develop`, set `version` in `packages/core/package.json`, `packages/server/package.json`, `packages/mirror/package.json` and `packages/core/src/version.ts` (and the ranges in `examples/basic/package.json`), and add the entry to `CHANGELOG.md`. Then open a pull request from `develop` to `master` and merge it with a merge commit (not squash or rebase, so `develop` stays in step with `master`).
-2. Push a tag `v<version>` on the merge commit on `master`: `git switch master && git pull && git tag v<version> && git push origin v<version>` (e.g. `v0.1.1`).
+2. If the packages do not have their trusted publishers on npmjs.com yet (see below), add them now. Then push a tag `v<version>` (e.g. `v0.1.1`) on the merge commit on `master`:
+
+   ```bash
+   git switch master
+   git pull
+   git tag v<version>
+   git push origin v<version>
+   ```
+
 3. `.github/workflows/release.yml` checks that the tagged commit is on `master` and the tag matches the versions, builds, tests, packs (`workspace:^` becomes the real range) and publishes `@mirage-x/core`, `@mirage-x/server`, then `@mirage-x/mirror`, with npm provenance. It authenticates with npm trusted publishing (OIDC), so no token is stored: on npmjs.com, each package has GitHub Actions `rheniumNV` / `mirage-x` / `release.yml` as its trusted publisher. A version that is already on npm is skipped.
 
 A trusted publisher can only be added to a package that already exists, and a new one expires unless it publishes within 2 days. So 0.1.0 was published by hand, and the trusted publishers are added right before the next release.
