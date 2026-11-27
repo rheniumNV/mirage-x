@@ -278,8 +278,8 @@ examples/
 
 3 つのパッケージは、同じバージョンで一緒にリリースします。
 
-1. `develop` で、`packages/core/package.json`、`packages/server/package.json`、`packages/mirror/package.json`、`packages/core/src/version.ts` のバージョン（と `examples/basic/package.json` の範囲）を変え、`CHANGELOG.md` に項目を足します。そのうえで `develop` を `master` にマージします。
-2. `master` のマージコミットに `v<バージョン>` のタグを付けて push します: `git switch master && git pull && git tag v0.1.0 && git push origin v0.1.0`。
+1. `develop` で、`packages/core/package.json`、`packages/server/package.json`、`packages/mirror/package.json`、`packages/core/src/version.ts` のバージョン（と `examples/basic/package.json` の範囲）を変え、`CHANGELOG.md` に項目を足します。そのうえで `develop` から `master` へのプルリクエストを作り、マージコミットでマージします（squash や rebase にはしません。`develop` と `master` の履歴を揃えておくためです）。
+2. `master` のマージコミットに `v<バージョン>` のタグを付けて push します: `git switch master && git pull && git tag v<バージョン> && git push origin v<バージョン>`（例: `v0.1.1`）。
 3. `.github/workflows/release.yml` が、タグの付いたコミットが `master` にあることと、タグと各パッケージのバージョンが一致することを確かめ、ビルド、テスト、pack（`workspace:^` が実際の範囲になります）を行い、`@mirage-x/core`、`@mirage-x/server`、`@mirage-x/mirror` の順に npm provenance つきで公開します。認証は npm の trusted publishing（OIDC）で、トークンは保存しません。npmjs.com で、各パッケージの trusted publisher に GitHub Actions の `rheniumNV` / `mirage-x` / `release.yml` を設定しています。すでに npm にあるバージョンは飛ばします。
 
 trusted publisher は、すでに存在するパッケージにしか設定できず、設定してから 2 日以内に公開しないと無効になります。そのため 0.1.0 は手で公開し、trusted publisher は次のリリースの直前に設定します。
