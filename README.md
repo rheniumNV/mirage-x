@@ -217,6 +217,7 @@ On attach, the developer's local connection settings (`Static.Web.Host`, `http:/
 - The output's `VersionNumber` is the oldest of the core's, the frame's and the Units', and its `FeatureFlags` are the ones all of them have, so Resonite converts data saved by older versions when it loads the output. That conversion runs on the whole output, so save your Units' feedback with a Resonite version close to the bundled core's when you can.
 - `build` warns when their versions are more than 90 days apart, when a feature flag is left out or differs, and when the core's or a Unit's `TypeVersions` entry differs from the output's.
 - A Unit without feedback takes the core's version and does not lower the output's.
+- To write the frame's `VersionNumber` and `FeatureFlags` as they are instead, set `versionSource: "frame"` in the `build` config (the default is `"oldest"`). Data saved by older Resonite versions in the core or the Units is then not converted; `build` warns about the flags that differ from the frame's.
 
 ## Examples
 

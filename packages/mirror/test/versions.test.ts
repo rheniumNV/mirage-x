@@ -4,7 +4,11 @@ import { describe, it } from "node:test";
 import { Document, type FeatureFlag } from "@frdt/frdt";
 import { UnitProp, generateUnitConfig } from "@mirage-x/core";
 
-import { partVersions, typeVersionWarnings } from "../src/frdt/versions.js";
+import {
+  partVersions,
+  typeVersionWarnings,
+  type VersionSource,
+} from "../src/frdt/versions.js";
 import { generateSimpleFrame } from "../src/frame/simpleFrame/index.js";
 import { generateClient } from "../src/generateClient.js";
 import { generateMirrorUnitFromFeedback } from "../src/unit/generateMirrorUnitFromFeedback.js";
@@ -94,7 +98,10 @@ describe("typeVersionWarnings", () => {
 });
 
 describe("generateClient versions", () => {
-  const client = (units: Record<string, Document>) =>
+  const client = (
+    units: Record<string, Document>,
+    versionSource?: VersionSource,
+  ) =>
     generateClient({
       appCode: "TestApp",
       hostCVPath: "",
@@ -107,6 +114,7 @@ describe("generateClient versions", () => {
       resetOnSave: true,
       units: { Test: units },
       generateFrame: generateSimpleFrame,
+      versionSource,
     });
   const config = generateUnitConfig({
     code: "Test/Panel",
@@ -130,4 +138,52 @@ describe("generateClient versions", () => {
     assert.equal(output.versionNumber(), "2025.12.1.1");
     assert.deepEqual(output.featureFlags(), saved.featureFlags());
   });
+
+  it('versionSource "frame" keeps the frame\'s version and flags', () => {
+    const saved = generateMirrorUnitFromFeedback({ config });
+    saved.setVersionNumber("2025.12.1.1");
+    saved.setFeatureFlags(saved.featureFlags().slice(0, 3));
+    const unit = generateMirrorUnitFromFeedback({ config, rawFeedback: saved });
+    const frame = client({}, "frame");
+    const output = client({ Panel: unit }, "frame");
+    assert.notEqual(output.versionNumber(), "2025.12.1.1");
+    assert.equal(output.versionNumber(), frame.versionNumber());
+    assert.deepEqual(output.featureFlags(), frame.featureFlags());
+    // The default is unchanged.
+    assert.equal(client({ Panel: unit }).versionNumber(), "2025.12.1.1");
+  });
 });
+
+describe('partVersions with "frame"', () => {
+  it("returns the first part's version and flags as they are", () => {
+    const result = partVersions(
+      [
+        part("frame", "2026.9.18.82", flags("A", ["B", 2])),
+        part("core", "2026.8.1.10", flags("A", ["B", 1], "C")),
+        part("Test/Unit", "2026.9.1.5", flags(["B", 2])),
+      ],
+      "frame",
+    );
+    assert.equal(result.versionNumber, "2026.9.18.82");
+    assert.deepEqual(result.featureFlags, flags("A", ["B", 2]));
+    assert.deepEqual(result.warnings, [
+      "FeatureFlag A is the frame's (0) in the output but differs in: Test/Unit (none)",
+      "FeatureFlag B is the frame's (2) in the output but differs in: core 1",
+      "FeatureFlag C is left out because the frame does not have it: core",
+    ]);
+  });
+
+  it("names the frame's version when parts are far apart", () => {
+    const result = partVersions(
+      [
+        part("frame", "2026.9.18.82", flags()),
+        part("Test/Unit", "2026.1.2.3", flags()),
+      ],
+      "frame",
+    );
+    assert.equal(result.versionNumber, "2026.9.18.82");
+    assert.equal(result.warnings.length, 1);
+    assert.match(result.warnings[0]!, /the output uses the frame's \(2026\.9\.18\.82\)/);
+  });
+});
+

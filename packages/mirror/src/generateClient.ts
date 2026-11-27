@@ -6,6 +6,7 @@ import {
   partVersions,
   typeVersionWarnings,
   type Part,
+  type VersionSource,
 } from "./frdt/versions.js";
 import {
   addValueVariable,
@@ -43,6 +44,7 @@ export const generateClient = ({
   generateFrame,
   developCode,
   resetOnSave,
+  versionSource = "oldest",
 }: {
   appCode: string;
   hostCVPath: string;
@@ -60,6 +62,8 @@ export const generateClient = ({
   resetOnSave: boolean;
   units: MirrorUnits;
   generateFrame: GenerateFrame;
+  /** Where the output's VersionNumber and FeatureFlags come from (default `"oldest"`). */
+  versionSource?: VersionSource;
 }): Document => {
   const core = readFeedback(assetPath("core/ResFeedback.brson"));
 
@@ -106,7 +110,7 @@ export const generateClient = ({
   const output = generateFrame({ appCode, core, env });
 
   // The frame keeps its own version while the core and units are imported;
-  // write the oldest part's instead.
+  // with "oldest", write the oldest part's instead.
   const imported: Part[] = [
     { label: "core", doc: core },
     ...Object.entries(units).flatMap(([category, categoryUnits]) =>
@@ -117,10 +121,10 @@ export const generateClient = ({
     ),
   ];
   // `output` still has the frame's version and flags here.
-  const { versionNumber, featureFlags, warnings } = partVersions([
-    { label: "frame", doc: output },
-    ...imported,
-  ]);
+  const { versionNumber, featureFlags, warnings } = partVersions(
+    [{ label: "frame", doc: output }, ...imported],
+    versionSource,
+  );
   for (const warning of [
     ...warnings,
     ...typeVersionWarnings(output, imported),
