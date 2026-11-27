@@ -49,7 +49,7 @@
   "dependencies": {
     "@frdt/frdt": "^0.2.4",
     "@mirage-x/core": "workspace:^",
-    "axios": "^1.7.7"
+    "axios": "^1.21.1"
   },
   "devDependencies": {
     "tsx": "^4.19.4"
