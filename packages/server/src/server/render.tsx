@@ -1,13 +1,13 @@
 import { useState, useEffect, type ReactNode, type ReactElement } from "react";
 import type { Logger } from "../logger/index.js";
-import type { UnitChangeServerEvent } from "../common/unitChangeEvent.js";
+import type { UnitChangeServerEvent } from "@mirage-x/core";
 import {
   type Authentication,
   MainRootContextProvider,
   useResoniteUser,
 } from "../main/index.js";
 import type { MainRootProps } from "../main/mainRootProps.js";
-import { LoggerProvider } from "../util/logger.js";
+import { LoggerProvider } from "../logger/context.js";
 
 const Main = ({
   connectionId,

@@ -19,32 +19,36 @@ You write a Resonite UI (or any object tree) as React components running on a No
 [Resonite] the mirror object
         │ WebSocket (sync)
         ▼
-[run time] @mirage-x/core server (your React app)
+[run time] @mirage-x/server (your React app)
+
+@mirage-x/core: the Unit definitions both sides share
 ```
 
 - A **Unit** is one kind of Resonite object (a text, an image, a panel …) with typed props. In React it is a component; in Resonite it is a template slot.
+- **`@mirage-x/core`** holds what both sides share: Unit definitions (`generateUnitConfig`, `UnitProp`, `UnitRef`) and the sync protocol.
 - **`@mirage-x/mirror`** (build time) assembles every Unit's template, the MirageX core and a frame into one `output.brson`. You drag it into Resonite (or let users spawn it).
-- **`@mirage-x/core`** (run time) renders your React app on the server and sends the changes to the mirror, which instantiates Unit templates and sets their props.
+- **`@mirage-x/server`** (run time) renders your React app on the server and sends the changes to the mirror, which instantiates Unit templates and sets their props.
 - A Unit's look is made **in Resonite**: you edit its template there, save it, and pull it back into your project as `ResFeedback.brson` (the **feedback** step).
 
 ## Packages
 
 | Package | Role |
 | --- | --- |
-| [`@mirage-x/core`](packages/core) | Run time: `MirageXServer`, Unit definitions (`UnitProp`, `generateUnitConfig`, `generateMain`), React reconciler |
+| [`@mirage-x/core`](packages/core) | Shared: Unit definitions (`generateUnitConfig`, `UnitProp`, `UnitRef`), `MirrorRef`, the sync protocol types |
+| [`@mirage-x/server`](packages/server) | Run time: `MirageXServer`, `generateMain` (a Unit as a React component), hooks (`useMirrorRef`, `useBoundCallback`, `useMainRootContext`), `Logger` |
 | [`@mirage-x/mirror`](packages/mirror) | Build time: `build()` → `output.brson`; feedback (`fetchFeedback`, `attachUnits`) |
 
-An app uses both. [`examples/basic`](examples/basic) is a complete app; the steps below follow it.
+An app uses all three: each Unit's `detail.ts` imports `@mirage-x/core`, its `main.tsx` and the app import `@mirage-x/server`, and its `mirror.ts` and the build script import `@mirage-x/mirror`. [`examples/basic`](examples/basic) is a complete app; the steps below follow it.
 
 ## Install
 
 ```bash
-pnpm add @mirage-x/core @mirage-x/mirror react@18
+pnpm add @mirage-x/core @mirage-x/server @mirage-x/mirror react@18
 # or
-npm install @mirage-x/core @mirage-x/mirror react@18
+npm install @mirage-x/core @mirage-x/server @mirage-x/mirror react@18
 ```
 
-Requires Node.js 22 or later. ESM only (`"type": "module"`). `react` 18 is a peer dependency of `@mirage-x/core`: your components and the runtime must share one React.
+Requires Node.js 22 or later. ESM only (`"type": "module"`). `react` 18 is a peer dependency of `@mirage-x/server`: your components and the runtime must share one React. The three packages are released together; keep them at the same version.
 
 ## Quick start
 
@@ -72,7 +76,7 @@ export const unitConfig = generateUnitConfig(detail);
 `main.tsx` — the React component (run time):
 
 ```ts
-import { generateMain } from "@mirage-x/core";
+import { generateMain } from "@mirage-x/server";
 import { unitConfig } from "./detail.js";
 
 export const O = generateMain(unitConfig);
@@ -110,7 +114,7 @@ import { PrimitiveText } from "./unit/main.js";
 export const App = () => <PrimitiveText content="Hello MirageX" size={64} />;
 ```
 
-A Unit takes the props declared in its `propsConfig`; slot properties such as `name` or `position` are declared there too (`position: UnitProp.Float3([0, 0, 0])`). It accepts children when its detail has `children: "multi"`. Slot references between Units (`useMirrorRef`, `UnitProp.Slot`, `UnitRef.Slot`) are described in [packages/core/docs/reference-prop.md](packages/core/docs/reference-prop.md).
+A Unit takes the props declared in its `propsConfig`; slot properties such as `name` or `position` are declared there too (`position: UnitProp.Float3([0, 0, 0])`). It accepts children when its detail has `children: "multi"`. Slot references between Units (`useMirrorRef` from `@mirage-x/server`, `UnitProp.Slot`, `UnitRef.Slot`) are described in [packages/core/docs/reference-prop.md](packages/core/docs/reference-prop.md).
 
 ### 3. Build `output.brson`
 
@@ -143,8 +147,7 @@ This writes `output/output.brson` and `output/version.json`. When the output has
 ```ts
 // src/server.ts
 import http from "node:http";
-import { Logger } from "@mirage-x/core";
-import { MirageXServer } from "@mirage-x/core/server";
+import { Logger, MirageXServer } from "@mirage-x/server";
 import express from "express";
 import { WebSocketServer } from "ws";
 import { App } from "./app.js";
@@ -221,7 +224,8 @@ The output is made of parts saved by Resonite at different times: the core and f
 - The mirror pipeline (`res()`) is now `build()` from `@mirage-x/mirror`. It uses [`@frdt/frdt`](https://www.npmjs.com/package/@frdt/frdt) instead of brson.js / VirtualObject and uses much less memory.
 - Feedback is Resonite `.brson` (`ResFeedback.brson`); JSON feedback is no longer read. Re-attach each Unit's feedback from Resonite (see above).
 - Only the `sync` protocol is supported; the `tree` mode was removed.
-- `@uni-pocket/*` is not needed; `Logger` is in `@mirage-x/core`.
+- The runtime is its own package: `MirageXServer` (formerly `@mirage-x/core/server`), `generateMain`, the hooks and `Logger` are imported from `@mirage-x/server`. Unit definitions stay in `@mirage-x/core`.
+- `@uni-pocket/*` is not needed.
 
 ## Examples
 
@@ -253,7 +257,8 @@ pnpm --filter @mirage-x/example-basic baseline:update
 
 ```text
 packages/
-  core/      @mirage-x/core
+  core/      @mirage-x/core (shared)
+  server/    @mirage-x/server (run time)
   mirror/    @mirage-x/mirror (assets/: bundled core and frames)
 examples/
   basic/
@@ -278,11 +283,11 @@ The fetched item is staged as `packages/mirror/scripts/feedback/ResFeedbackOrigi
 
 ## Release
 
-Both packages are released together with the same version.
+All three packages are released together with the same version.
 
-1. Set `version` in `packages/core/package.json`, `packages/mirror/package.json` and `packages/core/src/version.ts` (and the ranges in `examples/basic/package.json`), and add the entry to `CHANGELOG.md`. Merge this to `master`.
+1. Set `version` in `packages/core/package.json`, `packages/server/package.json`, `packages/mirror/package.json` and `packages/core/src/version.ts` (and the ranges in `examples/basic/package.json`), and add the entry to `CHANGELOG.md`. Merge this to `master`.
 2. Push a tag `v<version>` on that commit (`git tag v0.1.0 && git push origin v0.1.0`).
-3. `.github/workflows/release.yml` checks the tag against both versions, builds, tests, packs (`workspace:^` becomes the real range) and publishes `@mirage-x/core`, then `@mirage-x/mirror`, with npm provenance. It authenticates with npm trusted publishing (OIDC), so no token is stored: on npmjs.com, each package has GitHub Actions `rheniumNV` / `mirage-x` / `release.yml` as its trusted publisher. A version that is already on npm is skipped.
+3. `.github/workflows/release.yml` checks the tag against the versions, builds, tests, packs (`workspace:^` becomes the real range) and publishes `@mirage-x/core`, `@mirage-x/server`, then `@mirage-x/mirror`, with npm provenance. It authenticates with npm trusted publishing (OIDC), so no token is stored: on npmjs.com, each package has GitHub Actions `rheniumNV` / `mirage-x` / `release.yml` as its trusted publisher. A version that is already on npm is skipped.
 
 A trusted publisher can only be added to a package that already exists, and a new one expires unless it publishes within 2 days. So 0.1.0 was published by hand, and the trusted publishers are added right before the next release. Without them, npm falls back to an `NPM_TOKEN` repository secret if one is set.
 

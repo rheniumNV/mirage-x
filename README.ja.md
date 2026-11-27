@@ -19,32 +19,36 @@ Resonite の UI（やオブジェクトのツリー）を、Node.js のサーバ
 [Resonite] ミラーのオブジェクト
         │ WebSocket（sync）
         ▼
-[実行時] @mirage-x/core のサーバー（あなたの React アプリ）
+[実行時] @mirage-x/server（あなたの React アプリ）
+
+@mirage-x/core: 両方が共有する Unit の定義
 ```
 
 - **Unit** は、型つきの props を持つ Resonite のオブジェクトの種類（テキスト、画像、パネルなど）です。React ではコンポーネント、Resonite では雛形のスロットになります。
+- **`@mirage-x/core`** には、両方が共有するもの（Unit の定義 `generateUnitConfig`、`UnitProp`、`UnitRef` と、同期のプロトコル）があります。
 - **`@mirage-x/mirror`**（ビルド時）は、すべての Unit の雛形と MirageX の core、frame を 1 つの `output.brson` にまとめます。これを Resonite にドラッグします（またはユーザーに出してもらいます）。
-- **`@mirage-x/core`**（実行時）は、サーバーで React アプリを描画し、その変更をミラーに送ります。ミラーは Unit の雛形を生成し、props を設定します。
+- **`@mirage-x/server`**（実行時）は、サーバーで React アプリを描画し、その変更をミラーに送ります。ミラーは Unit の雛形を生成し、props を設定します。
 - Unit の見た目は **Resonite で** 作ります。Resonite で雛形を編集して保存し、`ResFeedback.brson` としてプロジェクトに取り込みます（**feedback** の手順）。
 
 ## パッケージ
 
 | パッケージ | 役割 |
 | --- | --- |
-| [`@mirage-x/core`](packages/core) | 実行時: `MirageXServer`、Unit の定義（`UnitProp`、`generateUnitConfig`、`generateMain`）、React のレコンサイラー |
+| [`@mirage-x/core`](packages/core) | 共有: Unit の定義（`generateUnitConfig`、`UnitProp`、`UnitRef`）、`MirrorRef`、同期のプロトコルの型 |
+| [`@mirage-x/server`](packages/server) | 実行時: `MirageXServer`、`generateMain`（Unit を React のコンポーネントにする）、フック（`useMirrorRef`、`useBoundCallback`、`useMainRootContext`）、`Logger` |
 | [`@mirage-x/mirror`](packages/mirror) | ビルド時: `build()` → `output.brson`、feedback（`fetchFeedback`、`attachUnits`） |
 
-アプリでは両方を使います。[`examples/basic`](examples/basic) が完成したアプリの例で、以下の手順もこれに沿っています。
+アプリでは 3 つとも使います。各 Unit の `detail.ts` は `@mirage-x/core` を、`main.tsx` とアプリは `@mirage-x/server` を、`mirror.ts` とビルド用スクリプトは `@mirage-x/mirror` を import します。[`examples/basic`](examples/basic) が完成したアプリの例で、以下の手順もこれに沿っています。
 
 ## インストール
 
 ```bash
-pnpm add @mirage-x/core @mirage-x/mirror react@18
+pnpm add @mirage-x/core @mirage-x/server @mirage-x/mirror react@18
 # または
-npm install @mirage-x/core @mirage-x/mirror react@18
+npm install @mirage-x/core @mirage-x/server @mirage-x/mirror react@18
 ```
 
-Node.js 22 以上が必要です。ESM のみです（`"type": "module"`）。`react` 18 は `@mirage-x/core` の peerDependency です。コンポーネントとランタイムが同じ React を使う必要があるためです。
+Node.js 22 以上が必要です。ESM のみです（`"type": "module"`）。`react` 18 は `@mirage-x/server` の peerDependency です。コンポーネントとランタイムが同じ React を使う必要があるためです。3 つのパッケージは一緒にリリースするので、版を揃えてください。
 
 ## クイックスタート
 
@@ -72,7 +76,7 @@ export const unitConfig = generateUnitConfig(detail);
 `main.tsx` — React のコンポーネント（実行時）:
 
 ```ts
-import { generateMain } from "@mirage-x/core";
+import { generateMain } from "@mirage-x/server";
 import { unitConfig } from "./detail.js";
 
 export const O = generateMain(unitConfig);
@@ -110,7 +114,7 @@ import { PrimitiveText } from "./unit/main.js";
 export const App = () => <PrimitiveText content="Hello MirageX" size={64} />;
 ```
 
-Unit が受け取るのは、`propsConfig` で宣言した props です。`name` や `position` のようなスロットの属性も、そこで宣言します（`position: UnitProp.Float3([0, 0, 0])`）。子要素を受け取るには、detail に `children: "multi"` を書きます。Unit 間の Slot の参照（`useMirrorRef`、`UnitProp.Slot`、`UnitRef.Slot`）は [packages/core/docs/reference-prop.md](packages/core/docs/reference-prop.md) で説明しています。
+Unit が受け取るのは、`propsConfig` で宣言した props です。`name` や `position` のようなスロットの属性も、そこで宣言します（`position: UnitProp.Float3([0, 0, 0])`）。子要素を受け取るには、detail に `children: "multi"` を書きます。Unit 間の Slot の参照（`@mirage-x/server` の `useMirrorRef`、`UnitProp.Slot`、`UnitRef.Slot`）は [packages/core/docs/reference-prop.md](packages/core/docs/reference-prop.md) で説明しています。
 
 ### 3. `output.brson` をビルドする
 
@@ -143,8 +147,7 @@ await build(
 ```ts
 // src/server.ts
 import http from "node:http";
-import { Logger } from "@mirage-x/core";
-import { MirageXServer } from "@mirage-x/core/server";
+import { Logger, MirageXServer } from "@mirage-x/server";
 import express from "express";
 import { WebSocketServer } from "ws";
 import { App } from "./app.js";
@@ -221,7 +224,8 @@ server.listen(3100);
 - mirror の処理（`res()`）は `@mirage-x/mirror` の `build()` になりました。brson.js / VirtualObject の代わりに [`@frdt/frdt`](https://www.npmjs.com/package/@frdt/frdt) を使い、メモリの使用量が大きく減っています。
 - feedback は Resonite の `.brson`（`ResFeedback.brson`）です。JSON の feedback は読みません。各 Unit の feedback を Resonite から取り込み直してください（上の手順）。
 - 対応するのは `sync` プロトコルだけです。`tree` モードは廃止しました。
-- `@uni-pocket/*` は不要です。`Logger` は `@mirage-x/core` にあります。
+- 実行時の部分は独立したパッケージになりました。`MirageXServer`（以前の `@mirage-x/core/server`）、`generateMain`、フック、`Logger` は `@mirage-x/server` から import します。Unit の定義は `@mirage-x/core` のままです。
+- `@uni-pocket/*` は不要です。
 
 ## サンプル
 
@@ -253,7 +257,8 @@ pnpm --filter @mirage-x/example-basic baseline:update
 
 ```text
 packages/
-  core/      @mirage-x/core
+  core/      @mirage-x/core（共有）
+  server/    @mirage-x/server（実行時）
   mirror/    @mirage-x/mirror（assets/: 同梱の core と frame）
 examples/
   basic/
@@ -278,11 +283,11 @@ examples/
 
 ## リリース
 
-2 つのパッケージは、同じ版で一緒にリリースします。
+3 つのパッケージは、同じ版で一緒にリリースします。
 
-1. `packages/core/package.json`、`packages/mirror/package.json`、`packages/core/src/version.ts` の版（と `examples/basic/package.json` の範囲）を変え、`CHANGELOG.md` に項目を足します。これを `master` にマージします。
+1. `packages/core/package.json`、`packages/server/package.json`、`packages/mirror/package.json`、`packages/core/src/version.ts` の版（と `examples/basic/package.json` の範囲）を変え、`CHANGELOG.md` に項目を足します。これを `master` にマージします。
 2. そのコミットに `v<版>` のタグを付けて push します（`git tag v0.1.0 && git push origin v0.1.0`）。
-3. `.github/workflows/release.yml` が、タグと両パッケージの版を照らし合わせ、ビルド、テスト、pack（`workspace:^` が実際の範囲になります）を行い、`@mirage-x/core`、`@mirage-x/mirror` の順に npm provenance つきで公開します。認証は npm の trusted publishing（OIDC）で、トークンは保存しません。npmjs.com で、各パッケージの trusted publisher に GitHub Actions の `rheniumNV` / `mirage-x` / `release.yml` を設定しています。すでに npm にある版は飛ばします。
+3. `.github/workflows/release.yml` が、タグと各パッケージの版を照らし合わせ、ビルド、テスト、pack（`workspace:^` が実際の範囲になります）を行い、`@mirage-x/core`、`@mirage-x/server`、`@mirage-x/mirror` の順に npm provenance つきで公開します。認証は npm の trusted publishing（OIDC）で、トークンは保存しません。npmjs.com で、各パッケージの trusted publisher に GitHub Actions の `rheniumNV` / `mirage-x` / `release.yml` を設定しています。すでに npm にある版は飛ばします。
 
 trusted publisher は、すでに存在するパッケージにしか設定できず、設定してから 2 日以内に公開しないと無効になります。そのため 0.1.0 は手で公開し、trusted publisher は次のリリースの直前に設定します。設定がない場合は、リポジトリの `NPM_TOKEN` シークレットがあればそれを使います。
 

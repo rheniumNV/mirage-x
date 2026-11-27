@@ -1,7 +1,7 @@
 {
   "name": "@mirage-x/core",
   "version": "0.1.0",
-  "description": "MirageX React runtime for Resonite UIX apps",
+  "description": "MirageX shared definitions: Units, props and refs, used by @mirage-x/server and @mirage-x/mirror",
   "keywords": [
     "resonite",
     "react",
@@ -32,37 +32,18 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    },
-    "./server": {
-      "types": "./dist/server/index.d.ts",
-      "import": "./dist/server/index.js"
     }
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
-    "test": "tsx --tsconfig tsconfig.test.json --test \"test/**/*.test.{ts,tsx}\""
-  },
-  "peerDependencies": {
-    "react": "^18.3.1"
+    "test": "tsx --tsconfig tsconfig.test.json --test \"test/**/*.test.ts\""
   },
   "dependencies": {
-    "@types/express": "^4.17.21",
-    "@types/react": "^18.3.3",
-    "@types/ws": "^8.5.10",
-    "axios": "^1.7.2",
-    "cors": "^2.8.5",
-    "express": "^4.19.2",
-    "jose": "^5.6.3",
-    "json2emap": "^1.0.0",
-    "react-reconciler": "^0.29.2",
-    "ws": "^8.17.0"
+    "@types/react": "^18.3.3"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "@types/react-reconciler": "^0.28.8",
-    "react": "^18.3.1",
     "tsx": "^4.23.12"
   },
   "publishConfig": {

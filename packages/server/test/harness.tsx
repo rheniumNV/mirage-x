@@ -6,7 +6,7 @@ import {
   type SetStateAction,
 } from "react";
 
-import type { UnitChangeServerEvent } from "../src/common/unitChangeEvent.js";
+import type { UnitChangeServerEvent } from "@mirage-x/core";
 import { MainRootContextProvider } from "../src/main/index.js";
 import { DummyReactRenderer } from "../src/server/dummyReactRenderer.js";
 

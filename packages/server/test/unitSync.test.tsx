@@ -1,13 +1,9 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
 
-import {
-  UnitProp,
-  UnitRef,
-  generateMain,
-  generateUnitConfig,
-  useMirrorRef,
-} from "../src/index.js";
+import { UnitProp, UnitRef, generateUnitConfig } from "@mirage-x/core";
+
+import { generateMain, useMirrorRef } from "../src/index.js";
 import {
   createControl,
   generated,

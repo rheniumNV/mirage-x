@@ -1,6 +1,6 @@
 import { useMemo, useSyncExternalStore } from "react";
 
-import { createMirrorRef, isMirrorRef, type MirrorRef } from "./mirrorRef.js";
+import { createMirrorRef, type MirrorRef } from "@mirage-x/core";
 
 export const useMirrorRef = (): MirrorRef => {
   return useMemo(() => createMirrorRef(), []);
@@ -21,6 +21,3 @@ export const useMirrorRefSnapshot = (
     () => (ref ? ref.getSnapshot() : ""),
   );
 };
-
-export { createMirrorRef, isMirrorRef };
-export type { MirrorRef, MirrorRefOption, MirrorRefBindMeta } from "./mirrorRef.js";

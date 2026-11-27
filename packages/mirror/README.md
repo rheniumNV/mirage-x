@@ -2,24 +2,22 @@
 
 # @mirage-x/mirror
 
-The build-time half of [MirageX](https://github.com/rheniumNV/mirage-x#readme), a server-side React framework that syncs a Unit tree to a Resonite-side mirror over WebSocket.
-
-It provides:
+The build-time part of [MirageX](https://github.com/rheniumNV/mirage-x#readme), a server-side React framework that syncs a Unit tree to a Resonite-side mirror over WebSocket.
 
 - `build()`: assembles your Units' Resonite templates, the MirageX core and a frame into `output.brson`, the object you place in Resonite
 - `generateMirrorUnitFromFeedback`: a Unit's template, from its feedback (`ResFeedback.brson`) when there is one
 - Feedback: `fetchFeedback` and `attachUnits` pull the Units you shaped in Resonite back into your project
 - The bundled core and frames (`generateSimpleFrame`, `generateInstallFrame`)
 
-Documents are read and written with [`@frdt/frdt`](https://www.npmjs.com/package/@frdt/frdt).
+Documents are read and written with [`@frdt/frdt`](https://www.npmjs.com/package/@frdt/frdt). It does not depend on `@mirage-x/server`, so a build environment does not need the server's dependencies.
 
-An app also needs [`@mirage-x/core`](https://www.npmjs.com/package/@mirage-x/core), which runs it. **See the [MirageX README](https://github.com/rheniumNV/mirage-x#readme) for how to use them together**, and [`examples/basic`](https://github.com/rheniumNV/mirage-x/tree/master/examples/basic) for a complete app.
+MirageX is published as three packages, used together: [`@mirage-x/core`](https://www.npmjs.com/package/@mirage-x/core) (shared Unit definitions), [`@mirage-x/server`](https://www.npmjs.com/package/@mirage-x/server) (run time) and [`@mirage-x/mirror`](https://www.npmjs.com/package/@mirage-x/mirror) (build time). **See the [MirageX README](https://github.com/rheniumNV/mirage-x#readme) for how to use them**, and [`examples/basic`](https://github.com/rheniumNV/mirage-x/tree/master/examples/basic) for a complete app.
 
 ```bash
-npm install @mirage-x/core @mirage-x/mirror react@18
+npm install @mirage-x/core @mirage-x/server @mirage-x/mirror react@18
 ```
 
-Node.js 22 or later, ESM only.
+Node.js 22 or later, ESM only. Keep the three packages at the same version.
 
 This project is developed with generative AI coding tools (Claude Code); changes are reviewed and tested by the maintainer.
 

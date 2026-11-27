@@ -6,7 +6,7 @@ import {
   useState,
   useEffect,
 } from "react";
-import type { UnitChangeServerEvent } from "../common/unitChangeEvent.js";
+import type { UnitChangeServerEvent } from "@mirage-x/core";
 
 export type Authentication = {
   token: string;

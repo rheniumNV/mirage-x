@@ -1,4 +1,4 @@
-import type { RefType } from "../../common/mainProp.js";
+import type { RefType } from "../common/mainProp.js";
 
 export type RefConfig = {
   /** Named export under DV/Refs (not the unit root). */

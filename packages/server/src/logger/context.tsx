@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, type ReactNode } from "react";
-import type { Logger } from "../logger/index.js";
+import type { Logger } from "./index.js";
 
 const LoggerContext = createContext<Logger | undefined>(undefined);
 

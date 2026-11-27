@@ -2,21 +2,23 @@
 
 # @mirage-x/core
 
-The run-time half of [MirageX](https://github.com/rheniumNV/mirage-x#readme), a server-side React framework that syncs a Unit tree to a Resonite-side mirror over WebSocket.
+The shared part of [MirageX](https://github.com/rheniumNV/mirage-x#readme), a server-side React framework that syncs a Unit tree to a Resonite-side mirror over WebSocket.
 
-It provides:
+It holds what the run time and the build time both use:
 
-- Unit definitions: `generateUnitConfig`, `UnitProp`, `UnitRef`, `generateMain` (a Unit as a React component)
-- `MirageXServer` (`@mirage-x/core/server`): renders your React app and sends its changes to the mirror in Resonite
-- Hooks and helpers: `useMirrorRef`, `useBoundCallback`, `useMainRootContext`, `FunctionEnv`, `Logger`
+- Unit definitions: `generateUnitConfig`, `UnitProp`, `UnitRef` and their types (`DetailBase`, `UnitConfig`, `getMainProps` …)
+- `MirrorRef` (`createMirrorRef`, `isMirrorRef`) and `FunctionEnv`
+- The types of the sync protocol between the server and the mirror
 
-An app also needs [`@mirage-x/mirror`](https://www.npmjs.com/package/@mirage-x/mirror), which builds the object you place in Resonite. **See the [MirageX README](https://github.com/rheniumNV/mirage-x#readme) for how to use them together**, and [`examples/basic`](https://github.com/rheniumNV/mirage-x/tree/master/examples/basic) for a complete app.
+It has no runtime dependencies. Slot references are described in [docs/reference-prop.md](https://github.com/rheniumNV/mirage-x/blob/master/packages/core/docs/reference-prop.md).
+
+MirageX is published as three packages, used together: [`@mirage-x/core`](https://www.npmjs.com/package/@mirage-x/core) (shared Unit definitions), [`@mirage-x/server`](https://www.npmjs.com/package/@mirage-x/server) (run time) and [`@mirage-x/mirror`](https://www.npmjs.com/package/@mirage-x/mirror) (build time). **See the [MirageX README](https://github.com/rheniumNV/mirage-x#readme) for how to use them**, and [`examples/basic`](https://github.com/rheniumNV/mirage-x/tree/master/examples/basic) for a complete app.
 
 ```bash
-npm install @mirage-x/core @mirage-x/mirror react@18
+npm install @mirage-x/core @mirage-x/server @mirage-x/mirror react@18
 ```
 
-Node.js 22 or later, ESM only. `react` 18 is a peer dependency.
+Node.js 22 or later, ESM only. Keep the three packages at the same version.
 
 This project is developed with generative AI coding tools (Claude Code); changes are reviewed and tested by the maintainer.
 

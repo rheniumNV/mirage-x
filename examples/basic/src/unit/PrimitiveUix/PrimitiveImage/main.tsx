@@ -1,4 +1,4 @@
-import { generateMain } from "@mirage-x/core";
+import { generateMain } from "@mirage-x/server";
 
 import { unitConfig } from "./detail.js";
 

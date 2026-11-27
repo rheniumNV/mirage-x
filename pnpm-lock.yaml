@@ -165,6 +165,7 @@ settings:
 overrides:
   '@mirage-x/core': workspace:*
   '@mirage-x/mirror': workspace:*
+  '@mirage-x/server': workspace:*
 
 importers:
 
@@ -185,6 +186,9 @@ importers:
       '@mirage-x/mirror':
         specifier: workspace:*
         version: link:../../packages/mirror
+      '@mirage-x/server':
+        specifier: workspace:*
+        version: link:../../packages/server
       express:
         specifier: ^4.19.2
         version: 4.22.2
@@ -216,6 +220,35 @@ importers:
 
   packages/core:
     dependencies:
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.31
+    devDependencies:
+      tsx:
+        specifier: ^4.23.12
+        version: 4.23.12
+
+  packages/mirror:
+    dependencies:
+      '@frdt/frdt':
+        specifier: ^0.2.4
+        version: 0.2.4
+      '@mirage-x/core':
+        specifier: workspace:*
+        version: link:../core
+      axios:
+        specifier: ^1.7.7
+        version: 1.19.0(debug@4.4.3)
+    devDependencies:
+      tsx:
+        specifier: ^4.19.4
+        version: 4.23.12
+
+  packages/server:
+    dependencies:
+      '@mirage-x/core':
+        specifier: workspace:*
+        version: link:../core
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.25
@@ -258,22 +291,6 @@ importers:
         version: 18.3.1
       tsx:
         specifier: ^4.23.12
-        version: 4.23.12
-
-  packages/mirror:
-    dependencies:
-      '@frdt/frdt':
-        specifier: ^0.2.4
-        version: 0.2.4
-      '@mirage-x/core':
-        specifier: workspace:*
-        version: link:../core
-      axios:
-        specifier: ^1.7.7
-        version: 1.19.0(debug@4.4.3)
-    devDependencies:
-      tsx:
-        specifier: ^4.19.4
         version: 4.23.12
 
 packages:

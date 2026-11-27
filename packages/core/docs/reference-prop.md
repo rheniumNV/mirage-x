@@ -5,13 +5,8 @@ React 側では `useMirrorRef` で Unit 間の Slot 参照を共有します。R
 ## React での使い方
 
 ```tsx
-import {
-  useMirrorRef,
-  UnitProp,
-  UnitRef,
-  generateUnitConfig,
-  generateMain,
-} from "@mirage-x/core";
+import { UnitProp, UnitRef, generateUnitConfig } from "@mirage-x/core";
+import { generateMain, useMirrorRef } from "@mirage-x/server";
 
 // 生産者: ルート Slot は常に rootSlotRef で export 可能（refsConfig 不要）
 // refsConfig の名前付き ref は mirror brson の DV/Refs.{name} になる

@@ -2,21 +2,23 @@
 
 # @mirage-x/core
 
-[MirageX](https://github.com/rheniumNV/mirage-x/blob/master/README.ja.md) の実行時の部分です。MirageX は、WebSocket を介して Unit のツリーを Resonite 側のミラーと同期させるサーバーサイド React フレームワークです。
+[MirageX](https://github.com/rheniumNV/mirage-x/blob/master/README.ja.md) の共有部分です。MirageX は、WebSocket を介して Unit のツリーを Resonite 側のミラーと同期させるサーバーサイド React フレームワークです。
 
-このパッケージにあるもの:
+実行時とビルド時の両方が使うものをまとめています:
 
-- Unit の定義: `generateUnitConfig`、`UnitProp`、`UnitRef`、`generateMain`（Unit を React のコンポーネントにする）
-- `MirageXServer`（`@mirage-x/core/server`）: React アプリを描画し、その変更を Resonite のミラーに送ります
-- フックとヘルパー: `useMirrorRef`、`useBoundCallback`、`useMainRootContext`、`FunctionEnv`、`Logger`
+- Unit の定義: `generateUnitConfig`、`UnitProp`、`UnitRef` とその型（`DetailBase`、`UnitConfig`、`getMainProps` など）
+- `MirrorRef`（`createMirrorRef`、`isMirrorRef`）と `FunctionEnv`
+- サーバーとミラーの間の同期のプロトコルの型
 
-アプリには、Resonite に置くオブジェクトをビルドする [`@mirage-x/mirror`](https://www.npmjs.com/package/@mirage-x/mirror) も必要です。**2 つを一緒に使う方法は [MirageX の README](https://github.com/rheniumNV/mirage-x/blob/master/README.ja.md) を見てください**。完成したアプリの例は [`examples/basic`](https://github.com/rheniumNV/mirage-x/tree/master/examples/basic) にあります。
+実行時の依存はありません。Slot の参照は [docs/reference-prop.md](https://github.com/rheniumNV/mirage-x/blob/master/packages/core/docs/reference-prop.md) で説明しています。
+
+MirageX は 3 つのパッケージで公開していて、一緒に使います。[`@mirage-x/core`](https://www.npmjs.com/package/@mirage-x/core)（共有する Unit の定義）、[`@mirage-x/server`](https://www.npmjs.com/package/@mirage-x/server)（実行時）、[`@mirage-x/mirror`](https://www.npmjs.com/package/@mirage-x/mirror)（ビルド時）です。**使い方は [MirageX の README](https://github.com/rheniumNV/mirage-x/blob/master/README.ja.md) を見てください**。完成したアプリの例は [`examples/basic`](https://github.com/rheniumNV/mirage-x/tree/master/examples/basic) にあります。
 
 ```bash
-npm install @mirage-x/core @mirage-x/mirror react@18
+npm install @mirage-x/core @mirage-x/server @mirage-x/mirror react@18
 ```
 
-Node.js 22 以上、ESM のみです。`react` 18 は peerDependency です。
+Node.js 22 以上、ESM のみです。3 つのパッケージは版を揃えてください。
 
 このプロジェクトは、生成 AI のコーディングツール（Claude Code）を使って開発しています。変更はメンテナーが確認し、テストしています。
 

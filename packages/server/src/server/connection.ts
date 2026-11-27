@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { WebSocket } from "ws";
 import type { ReactElement } from "react";
 import type { Logger } from "../logger/index.js";
-import type { UnitChangeClientEvent } from "../common/unitChangeEvent.js";
+import type { UnitChangeClientEvent } from "@mirage-x/core";
 import { LogicManager } from "./logicManager.js";
 
 type N2mEvent = {

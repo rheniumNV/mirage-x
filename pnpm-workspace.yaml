@@ -9,6 +9,7 @@ preferWorkspacePackages: true
 overrides:
   "@mirage-x/core": "workspace:*"
   "@mirage-x/mirror": "workspace:*"
+  "@mirage-x/server": "workspace:*"
 
 allowBuilds:
   esbuild: true

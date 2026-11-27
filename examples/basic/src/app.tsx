@@ -1,4 +1,4 @@
-import { useMirrorRef } from "@mirage-x/core";
+import { useMirrorRef } from "@mirage-x/server";
 
 import {
   Canvas,
