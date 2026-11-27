@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { setVariableValues, str } from "./frdt/util.js";
+import type { VersionSource } from "./frdt/versions.js";
 import {
   generateClient,
   type GenerateFrame,
@@ -35,6 +36,12 @@ export type BuildConfig = {
   };
   resetOnSave?: boolean;
   developCode?: string;
+  /**
+   * Where the output's `VersionNumber` and `FeatureFlags` come from.
+   * `"oldest"` (default): the oldest of the core's, the frame's and the
+   * Units', with the flags all of them have. `"frame"`: the frame's.
+   */
+  versionSource?: VersionSource;
 };
 
 export type BuildResult = {
@@ -99,6 +106,7 @@ export const build = async (
     resetOnSave: config.resetOnSave ?? true,
     units,
     generateFrame,
+    versionSource: config.versionSource,
   });
   output.renumberIds(ID_SEED);
   console.debug("end generating");
