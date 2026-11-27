@@ -6,7 +6,7 @@ import { DummyReactRenderer } from "../src/server/dummyReactRenderer.js";
 import { render } from "../src/server/render.js";
 import { LogContext, Logger, useLogger } from "../src/index.js";
 
-/** Let the renderer finish its work. */
+/** Give the renderer a moment (rendering is synchronous; this is a margin). */
 const tick = () => new Promise((resolve) => setTimeout(resolve, 10));
 
 describe("useLogger / LogContext", () => {
@@ -49,7 +49,7 @@ describe("useLogger / LogContext", () => {
         eventEmitter={() => {}}
         functionMap={new Map()}
         propsSetterRegister={() => {}}
-        platformApiUrl="https://api.example.local/"
+        platformApiUrl="http://127.0.0.1:9/"
       />,
     );
     await tick();
