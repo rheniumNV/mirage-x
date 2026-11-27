@@ -24,4 +24,4 @@ First release.
   - The output's `VersionNumber` is the oldest of the core's, the frame's and the Units', with the `FeatureFlags` all of them have; `build` warns when they are far apart.
   - `compareOutput`: compares two outputs by structure and values.
 
-Known limitations: `UnitProp.Slot`'s `dvMode` is not applied yet; a Slot prop is always a `DynamicReferenceVariable<Slot>` (#1).
+Known limitations: `UnitProp.Slot`'s `dvMode` is not applied yet; a Slot prop is always a `DynamicReferenceVariable<Slot>` ([#1](https://github.com/rheniumNV/mirage-x/issues/1)).
