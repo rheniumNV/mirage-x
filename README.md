@@ -274,10 +274,12 @@ The fetched item is staged as `packages/mirror/scripts/feedback/ResFeedbackOrigi
 
 ## Release
 
+Work goes into `develop` through pull requests. When `develop` has what the next version needs, it is merged into `master` and released from there.
+
 All three packages are released together with the same version.
 
-1. Set `version` in `packages/core/package.json`, `packages/server/package.json`, `packages/mirror/package.json` and `packages/core/src/version.ts` (and the ranges in `examples/basic/package.json`), and add the entry to `CHANGELOG.md`. Merge this to `master`.
-2. Push a tag `v<version>` on that commit (`git tag v0.1.0 && git push origin v0.1.0`).
+1. On `develop`, set `version` in `packages/core/package.json`, `packages/server/package.json`, `packages/mirror/package.json` and `packages/core/src/version.ts` (and the ranges in `examples/basic/package.json`), and add the entry to `CHANGELOG.md`. Then merge `develop` into `master`.
+2. Push a tag `v<version>` on the merge commit on `master` (`git tag v0.1.0 && git push origin v0.1.0`).
 3. `.github/workflows/release.yml` checks the tag against the versions, builds, tests, packs (`workspace:^` becomes the real range) and publishes `@mirage-x/core`, `@mirage-x/server`, then `@mirage-x/mirror`, with npm provenance. It authenticates with npm trusted publishing (OIDC), so no token is stored: on npmjs.com, each package has GitHub Actions `rheniumNV` / `mirage-x` / `release.yml` as its trusted publisher. A version that is already on npm is skipped.
 
 A trusted publisher can only be added to a package that already exists, and a new one expires unless it publishes within 2 days. So 0.1.0 was published by hand, and the trusted publishers are added right before the next release.

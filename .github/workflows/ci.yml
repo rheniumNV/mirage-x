@@ -2,12 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [master, develop]
   pull_request:
 
 concurrency:
   group: ci-${{ github.ref }}
-  # Cancel superseded PR runs only; keep every run on master.
+  # Cancel superseded PR runs only; keep every run on master and develop.
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
