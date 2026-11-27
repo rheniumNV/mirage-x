@@ -12,6 +12,9 @@ import { placeCore } from "../placeCore.js";
  * and the core takes the place of the placeholder (`Static.AppRoot`), under
  * the placeholder's parent.
  *
+ * The frame needs what `placeCore` needs: `Static.AppRoot` on the root,
+ * pointing at the placeholder, and a `DV` child of the root.
+ *
  * `feedback` is a `.brson` file (path or URL) or a `Document`; it is read
  * (or copied) for each build.
  */

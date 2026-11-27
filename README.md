@@ -139,7 +139,7 @@ await build(
 );
 ```
 
-To use your own frame (a frame feedback saved from Resonite, with the `Static.AppRoot` placeholder and `Static.FrameCode` like the bundled ones), pass `generateSimpleFrameFromFeedback(new URL("./frame/ResFeedback.brson", import.meta.url))` (or `generateInstallFrameFromFeedback`) instead. `attachSimpleFrame` / `attachInstallFrame` make that file from a fetched feedback when its `Static.FrameCode` is `Simple` / `InstalledAvatar` (otherwise they warn and write nothing). For full control, `placeCore(frame, { core, env }, (placeholder) => parent)` puts the core into a frame document under the slot you return; `parentOf(frame, placeholder)` finds the placeholder's parent.
+To use your own frame (a frame feedback saved from Resonite, built like the bundled ones: a `Static.AppRoot` reference to the placeholder and a `DV` slot on the root, plus `Static.PanelRoot` for an install frame), pass `generateSimpleFrameFromFeedback(new URL("./frame/ResFeedback.brson", import.meta.url))` (or `generateInstallFrameFromFeedback`) instead. `attachSimpleFrame` / `attachInstallFrame` make that file from a fetched feedback when its `Static.FrameCode` is `Simple` / `InstalledAvatar` (otherwise they warn and write nothing). For full control, `placeCore(frame, { core, env }, (placeholder) => parent)` puts the core into a frame document under the slot you return; `parentOf(frame, placeholder)` finds the placeholder's parent.
 
 This writes `output/output.brson` and `output/version.json`. When the output has not changed, nothing is written. Rebuild after changing Units or their feedback.
 

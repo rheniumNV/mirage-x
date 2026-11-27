@@ -139,7 +139,7 @@ await build(
 );
 ```
 
-独自の frame（同梱のものと同じく `Static.AppRoot` のプレースホルダーと `Static.FrameCode` を持つ、Resonite で保存した frame の feedback）を使うときは、代わりに `generateSimpleFrameFromFeedback(new URL("./frame/ResFeedback.brson", import.meta.url))`（または `generateInstallFrameFromFeedback`）を渡します。そのファイルは、`Static.FrameCode` が `Simple` / `InstalledAvatar` なら、取得した feedback から `attachSimpleFrame` / `attachInstallFrame` で作れます（それ以外のときは警告して何も書きません）。細かく制御したいときは、`placeCore(frame, { core, env }, (placeholder) => 親)` で、返したスロットの下に core を置けます。プレースホルダーの親は `parentOf(frame, placeholder)` で探せます。
+独自の frame（Resonite で保存した frame の feedback で、同梱のものと同じく、ルートにプレースホルダーを指す `Static.AppRoot` と `DV` スロットを持つもの。install frame はさらに `Static.PanelRoot` も持つもの）を使うときは、代わりに `generateSimpleFrameFromFeedback(new URL("./frame/ResFeedback.brson", import.meta.url))`（または `generateInstallFrameFromFeedback`）を渡します。そのファイルは、`Static.FrameCode` が `Simple` / `InstalledAvatar` なら、取得した feedback から `attachSimpleFrame` / `attachInstallFrame` で作れます（それ以外のときは警告して何も書きません）。細かく制御したいときは、`placeCore(frame, { core, env }, (placeholder) => 親)` で、返したスロットの下に core を置けます。プレースホルダーの親は `parentOf(frame, placeholder)` で探せます。
 
 `output/output.brson` と `output/version.json` が書き出されます。出力が変わっていなければ、何も書き込みません。Unit やその feedback を変えたら、ビルドし直してください。
 
