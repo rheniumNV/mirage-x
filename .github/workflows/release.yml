@@ -17,6 +17,9 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Full history, to check that the tagged commit is on master.
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v6
 
@@ -29,6 +32,15 @@ jobs:
       # Trusted publishing (OIDC) needs npm 11.5.1 or later; Node 22 ships npm 10.
       - name: Update npm
         run: npm install -g npm@11
+
+      # Releases come from master (develop is merged into it first).
+      - name: Check the tagged commit is on master
+        run: |
+          git fetch --no-tags origin master
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" FETCH_HEAD; then
+            echo "::error::$GITHUB_REF_NAME is not on master; merge develop into master and tag the merge commit"
+            exit 1
+          fi
 
       - name: Check the tag matches the package versions
         run: |
