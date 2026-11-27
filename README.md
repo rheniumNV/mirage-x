@@ -4,6 +4,13 @@ Server-side React framework that syncs a Unit tree to a Resonite-side mirror ove
 
 Alpha-quality rewrite extracted from UniPocket into a publishable monorepo. APIs may change.
 
+```bash
+pnpm add @mirage-x/core @mirage-x/mirror react@18
+# or: npm install @mirage-x/core @mirage-x/mirror react@18
+```
+
+Versions are `0.x`: a minor version (0.1 → 0.2) may break the API. See [CHANGELOG.md](CHANGELOG.md).
+
 ## Packages
 
 | Package | Role |
@@ -52,3 +59,11 @@ packages/
 examples/
   basic/
 ```
+
+## Release
+
+Both packages are released together with the same version.
+
+1. Set `version` in `packages/core/package.json`, `packages/mirror/package.json` and `packages/core/src/version.ts` (and the ranges in `examples/basic/package.json`), and add the entry to `CHANGELOG.md`. Merge this to `master`.
+2. Push a tag `v<version>` on that commit (`git tag v0.1.0 && git push origin v0.1.0`).
+3. `.github/workflows/release.yml` checks the tag against both versions, builds, tests, packs (`workspace:^` becomes the real range) and publishes `@mirage-x/core`, then `@mirage-x/mirror`, with npm provenance. It needs the `NPM_TOKEN` repository secret (an npm token allowed to publish `@mirage-x/*`).

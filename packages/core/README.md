@@ -5,8 +5,10 @@ MirageX React runtime for Resonite UIX apps.
 ## Install
 
 ```bash
-pnpm add @mirage-x/core
+pnpm add @mirage-x/core react@18   # or: npm install @mirage-x/core react@18
 ```
+
+`react` (18) is a peer dependency: your Units and the runtime must share one React. Requires Node.js 22 or later.
 
 ## Exports
 

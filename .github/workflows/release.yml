@@ -1,0 +1,72 @@
+name: Release
+
+# Publish @mirage-x/core and @mirage-x/mirror to npm when a version tag
+# (v0.1.0, ...) is pushed. The tag must match both packages' versions.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  # npm provenance (links each published version to this workflow run).
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Check the tag matches the package versions
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          for pkg in packages/core packages/mirror; do
+            version="$(node -p "require('./$pkg/package.json').version")"
+            if [ "$version" != "$tag" ]; then
+              echo "::error::$pkg is $version, but the tag is $GITHUB_REF_NAME"
+              exit 1
+            fi
+          done
+          if ! grep -q "version = \"$tag\"" packages/core/src/version.ts; then
+            echo "::error::packages/core/src/version.ts does not say $tag"
+            exit 1
+          fi
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+      - name: Test
+        run: pnpm -r --if-present test
+
+      # `pnpm pack` turns `workspace:^` into the real version range, so the
+      # tarballs install with npm as well as pnpm.
+      - name: Pack
+        run: |
+          mkdir -p "$RUNNER_TEMP/pack"
+          for pkg in packages/core packages/mirror; do
+            (cd "$pkg" && pnpm pack --pack-destination "$RUNNER_TEMP/pack")
+          done
+          ls -l "$RUNNER_TEMP/pack"
+
+      # core first: mirror depends on it.
+      - name: Publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm publish "$RUNNER_TEMP/pack/mirage-x-core-${GITHUB_REF_NAME#v}.tgz" --access public --provenance
+          npm publish "$RUNNER_TEMP/pack/mirage-x-mirror-${GITHUB_REF_NAME#v}.tgz" --access public --provenance

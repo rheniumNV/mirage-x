@@ -4,7 +4,11 @@ Builds the Resonite mirror (`output.brson` and `version.json`) from MirageX unit
 
 ## Install
 
-Workspace dependency:
+```bash
+pnpm add @mirage-x/mirror   # or: npm install @mirage-x/mirror
+```
+
+Requires Node.js 22 or later. `@mirage-x/core` is installed with it.
 
 ```ts
 import {
