@@ -1,6 +1,6 @@
 {
   "name": "@mirage-x/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MirageX shared definitions: Units, props and refs, used by @mirage-x/server and @mirage-x/mirror",
   "keywords": [
     "resonite",

@@ -2,6 +2,13 @@
 
 `@mirage-x/core`, `@mirage-x/server` and `@mirage-x/mirror` are released together with the same version.
 
+## 0.1.1
+
+- `@mirage-x/server`: export `useLogger` and `LogContext`, so components can log through the logger given to `MirageXServer` (`useLogger()` returns its child with the context name `render`; `LogContext` gives a subtree its own child logger).
+- `@mirage-x/mirror`:
+  - `generateSimpleFrameFromFeedback(feedback)` / `generateInstallFrameFromFeedback(feedback)` build a frame from your own frame feedback (a `.brson` path or URL, or a `Document`). `placeCore` and `parentOf` are exported for frames that need more control.
+  - `versionSource` option of `build()` / `generateClient()`: `"oldest"` (default, unchanged) or `"frame"`, which keeps the frame's `VersionNumber` and `FeatureFlags` as they are.
+
 ## 0.1.0
 
 First release.

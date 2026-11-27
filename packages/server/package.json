@@ -1,6 +1,6 @@
 {
   "name": "@mirage-x/server",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MirageX run time: renders a React app on the server and syncs its Units to the mirror in Resonite",
   "keywords": [
     "resonite",
