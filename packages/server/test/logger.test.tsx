@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import { LoggerProvider } from "../src/logger/context.js";
 import { DummyReactRenderer } from "../src/server/dummyReactRenderer.js";
+import { render } from "../src/server/render.js";
 import { LogContext, Logger, useLogger } from "../src/index.js";
 
 /** Let the renderer finish its work. */
@@ -30,6 +31,30 @@ describe("useLogger / LogContext", () => {
     assert.equal(app, root);
     assert.ok(child instanceof Logger);
     assert.notEqual(child, root);
+  });
+
+  it("an app rendered by MirageXServer's render() gets the logger it was given", async () => {
+    const logger = new Logger({ contextName: "render", logLevel: "error" });
+    const seen: Logger[] = [];
+    const App = () => {
+      seen.push(useLogger());
+      return null;
+    };
+    const AppRenderer = render(App, logger);
+    DummyReactRenderer.render(
+      <AppRenderer
+        connectionId="connection"
+        ownerId="U-test"
+        lang="ja"
+        eventEmitter={() => {}}
+        functionMap={new Map()}
+        propsSetterRegister={() => {}}
+        platformApiUrl="https://api.example.local/"
+      />,
+    );
+    await tick();
+    assert.ok(seen.length > 0, "App was not rendered");
+    assert.ok(seen.every((l) => l === logger));
   });
 
   it("throws outside MirageX's logger", async () => {
