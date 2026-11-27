@@ -34,7 +34,7 @@ Status: `0.x`. APIs may change; a minor version (0.1 → 0.2) may break them. Se
 | Package | Role |
 | --- | --- |
 | [`@mirage-x/core`](packages/core) | Shared: Unit definitions (`generateUnitConfig`, `UnitProp`, `UnitRef`), `MirrorRef`, the sync protocol types |
-| [`@mirage-x/server`](packages/server) | Run time: `MirageXServer`, `generateMain` (a Unit as a React component), hooks (`useMirrorRef`, `useBoundCallback`, `useMainRootContext`), `Logger` |
+| [`@mirage-x/server`](packages/server) | Run time: `MirageXServer`, `generateMain` (a Unit as a React component), hooks (`useMirrorRef`, `useBoundCallback`, `useMainRootContext`, `useLogger`), `Logger`, `LogContext` |
 | [`@mirage-x/mirror`](packages/mirror) | Build time: `build()` → `output.brson`; feedback (`fetchFeedback`, `attachUnits`) |
 
 An app uses all three: each Unit's `detail.ts` imports `@mirage-x/core`, its `main.tsx` and the app import `@mirage-x/server`, and its `mirror.ts` and the build script import `@mirage-x/mirror`. [`examples/basic`](examples/basic) is a complete app; the steps below follow it.

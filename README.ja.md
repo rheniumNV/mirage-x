@@ -34,7 +34,7 @@ Resonite の UI（やオブジェクトのツリー）を、Node.js のサーバ
 | パッケージ | 役割 |
 | --- | --- |
 | [`@mirage-x/core`](packages/core) | 共有: Unit の定義（`generateUnitConfig`、`UnitProp`、`UnitRef`）、`MirrorRef`、同期のプロトコルの型 |
-| [`@mirage-x/server`](packages/server) | 実行時: `MirageXServer`、`generateMain`（Unit を React のコンポーネントにする）、フック（`useMirrorRef`、`useBoundCallback`、`useMainRootContext`）、`Logger` |
+| [`@mirage-x/server`](packages/server) | 実行時: `MirageXServer`、`generateMain`（Unit を React のコンポーネントにする）、フック（`useMirrorRef`、`useBoundCallback`、`useMainRootContext`、`useLogger`）、`Logger`、`LogContext` |
 | [`@mirage-x/mirror`](packages/mirror) | ビルド時: `build()` → `output.brson`、feedback（`fetchFeedback`、`attachUnits`） |
 
 アプリでは 3 つとも使います。各 Unit の `detail.ts` は `@mirage-x/core` を、`main.tsx` とアプリは `@mirage-x/server` を、`mirror.ts` とビルド用スクリプトは `@mirage-x/mirror` を import します。[`examples/basic`](examples/basic) が完成したアプリの例で、以下の手順もこれに沿っています。

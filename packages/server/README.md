@@ -7,7 +7,7 @@ The run-time part of [MirageX](https://github.com/rheniumNV/mirage-x#readme), a 
 - `MirageXServer`: renders your React app on the server and sends its changes to the mirror in Resonite (express + WebSocket)
 - `generateMain`: a Unit as a React component
 - Hooks: `useMirrorRef`, `useBoundCallback`, `useMainRootContext`
-- `Logger`
+- `Logger`, and `useLogger` / `LogContext` to use the server's logger from your components (`LogContext` gives its children a child logger with its own context name)
 
 `react` 19 (19.3 or later) is a peer dependency: your components and the runtime must share one React.
 

@@ -9,4 +9,5 @@ export { useMainRootContext } from "./main/index.js";
 export type { Authentication, MainRootContextValue } from "./main/index.js";
 
 export { Logger } from "./logger/index.js";
+export { useLogger, LogContext } from "./logger/context.js";
 export type { LogLevel } from "./logger/index.js";
