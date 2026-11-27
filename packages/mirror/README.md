@@ -19,8 +19,10 @@ npm install @mirage-x/core @mirage-x/server @mirage-x/mirror react@18
 
 Node.js 22 or later, ESM only. Keep the three packages at the same version.
 
-This project is developed with generative AI coding tools (Claude Code); changes are reviewed and tested by the maintainer.
-
 ## License
 
 MIT
+
+## Development with generative AI
+
+This project is developed with generative AI coding tools (Claude Code). Changes are reviewed and tested by the maintainer, including in Resonite.

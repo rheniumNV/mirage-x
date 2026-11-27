@@ -4,8 +4,8 @@
 
 [MirageX](https://github.com/rheniumNV/mirage-x/blob/master/README.ja.md) のビルド時の部分です。MirageX は、WebSocket を介して Unit のツリーを Resonite 側のミラーと同期させるサーバーサイド React フレームワークです。
 
-- `build()`: Unit の Resonite 側の雛形と、MirageX の core、frame をまとめて、Resonite に置くオブジェクト `output.brson` を作ります
-- `generateMirrorUnitFromFeedback`: Unit の雛形を作ります。feedback（`ResFeedback.brson`）があればそれを使います
+- `build()`: Unit の Resonite 側のテンプレートと、MirageX の core、frame をまとめて、Resonite に置くオブジェクト `output.brson` を作ります
+- `generateMirrorUnitFromFeedback`: Unit のテンプレートを作ります。feedback（`ResFeedback.brson`）があればそれを使います
 - feedback: `fetchFeedback` と `attachUnits` で、Resonite で作り込んだ Unit をプロジェクトに取り込みます
 - 同梱の core と frame（`generateSimpleFrame`、`generateInstallFrame`）
 
@@ -17,10 +17,12 @@ MirageX は 3 つのパッケージで公開していて、一緒に使います
 npm install @mirage-x/core @mirage-x/server @mirage-x/mirror react@18
 ```
 
-Node.js 22 以上、ESM のみです。3 つのパッケージは版を揃えてください。
-
-このプロジェクトは、生成 AI のコーディングツール（Claude Code）を使って開発しています。変更はメンテナーが確認し、テストしています。
+Node.js 22 以上、ESM のみです。3 つのパッケージはバージョンを揃えてください。
 
 ## ライセンス
 
 MIT
+
+## 生成 AI を使った開発
+
+このプロジェクトは、生成 AI のコーディングツール（Claude Code）を使って開発しています。変更はメンテナーが確認し、Resonite での動作も含めてテストしています。

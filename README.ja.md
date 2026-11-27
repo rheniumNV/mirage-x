@@ -6,14 +6,13 @@ WebSocket を介して、Unit のツリーを Resonite 側のミラーと同期�
 
 Resonite の UI（やオブジェクトのツリー）を、Node.js のサーバー上で動く React コンポーネントとして書きます。Resonite に置いたオブジェクトがそのサーバーに接続してツリーを映し出し、React の状態が変わると Resonite 側も更新されます。
 
-- 状態: `0.x` です。UniPocket の MirageX から切り出しました。API は変わることがあり、マイナーバージョン（0.1 → 0.2）で互換性が崩れることがあります。[CHANGELOG.md](CHANGELOG.md) を見てください。
-- このプロジェクトは、生成 AI のコーディングツール（Claude Code）を使って開発しています。変更はメンテナーが確認し、Resonite での動作も含めてテストしています。
+状態: `0.x` です。API は変わることがあり、マイナーバージョン（0.1 → 0.2）で互換性が崩れることがあります。[CHANGELOG.md](CHANGELOG.md) を見てください。
 
 ## 仕組み
 
 ```text
 [ビルド時] @mirage-x/mirror
-  Unit の雛形（ResFeedback.brson）＋ 同梱の core / frame
+  Unit のテンプレート（ResFeedback.brson）＋ 同梱の core / frame
         │ output.brson（Resonite にドラッグ）
         ▼
 [Resonite] ミラーのオブジェクト
@@ -24,11 +23,11 @@ Resonite の UI（やオブジェクトのツリー）を、Node.js のサーバ
 @mirage-x/core: 両方が共有する Unit の定義
 ```
 
-- **Unit** は、型つきの props を持つ Resonite のオブジェクトの種類（テキスト、画像、パネルなど）です。React ではコンポーネント、Resonite では雛形のスロットになります。
+- **Unit** は、型つきの props を持つ Resonite のオブジェクトの種類（テキスト、画像、パネルなど）です。React ではコンポーネント、Resonite ではテンプレートのスロットになります。
 - **`@mirage-x/core`** には、両方が共有するもの（Unit の定義 `generateUnitConfig`、`UnitProp`、`UnitRef` と、同期のプロトコル）があります。
-- **`@mirage-x/mirror`**（ビルド時）は、すべての Unit の雛形と MirageX の core、frame を 1 つの `output.brson` にまとめます。これを Resonite にドラッグします（またはユーザーに出してもらいます）。
-- **`@mirage-x/server`**（実行時）は、サーバーで React アプリを描画し、その変更をミラーに送ります。ミラーは Unit の雛形を生成し、props を設定します。
-- Unit の見た目は **Resonite で** 作ります。Resonite で雛形を編集して保存し、`ResFeedback.brson` としてプロジェクトに取り込みます（**feedback** の手順）。
+- **`@mirage-x/mirror`**（ビルド時）は、すべての Unit のテンプレートと MirageX の core、frame を 1 つの `output.brson` にまとめます。これを Resonite にドラッグします（またはユーザーに出してもらいます）。
+- **`@mirage-x/server`**（実行時）は、サーバーで React アプリを描画し、その変更をミラーに送ります。ミラーは Unit のテンプレートを生成し、props を設定します。
+- Unit の見た目は **Resonite で** 作ります。Resonite でテンプレートを編集して保存し、`ResFeedback.brson` としてプロジェクトに取り込みます（**feedback** の手順）。
 
 ## パッケージ
 
@@ -48,7 +47,7 @@ pnpm add @mirage-x/core @mirage-x/server @mirage-x/mirror react@18
 npm install @mirage-x/core @mirage-x/server @mirage-x/mirror react@18
 ```
 
-Node.js 22 以上が必要です。ESM のみです（`"type": "module"`）。`react` 18 は `@mirage-x/server` の peerDependency です。コンポーネントとランタイムが同じ React を使う必要があるためです。3 つのパッケージは一緒にリリースするので、版を揃えてください。
+Node.js 22 以上が必要です。ESM のみです（`"type": "module"`）。`react` 18 は `@mirage-x/server` の peerDependency です。コンポーネントとランタイムが同じ React を使う必要があるためです。3 つのパッケージは一緒にリリースするので、バージョンを揃えてください。
 
 ## クイックスタート
 
@@ -82,7 +81,7 @@ import { unitConfig } from "./detail.js";
 export const O = generateMain(unitConfig);
 ```
 
-`mirror.ts` — Resonite 側の雛形（ビルド時）。feedback があればそれを読みます。feedback のない Unit は空から始まります:
+`mirror.ts` — Resonite 側のテンプレート（ビルド時）。feedback があればそれを読みます。feedback のない Unit は空から始まります:
 
 ```ts
 import { generateMirrorUnitFromFeedback, readFeedbackIfExists } from "@mirage-x/mirror";
@@ -94,7 +93,7 @@ export const mirror = generateMirrorUnitFromFeedback({
 });
 ```
 
-これらをまとめます。`src/unit/main.ts` でコンポーネントを、`src/unit/mirror.ts` で雛形を、パッケージ名と Unit 名をキーにして export します:
+これらをまとめます。`src/unit/main.ts` でコンポーネントを、`src/unit/mirror.ts` でテンプレートを、パッケージ名と Unit 名をキーにして export します:
 
 ```ts
 // src/unit/main.ts
@@ -187,9 +186,9 @@ server.listen(3100);
 
 ## Resonite で Unit を作り込む（feedback）
 
-新しい Unit の雛形は空です。Resonite で見た目を作り、プロジェクトに取り込みます:
+新しい Unit のテンプレートは空です。Resonite で見た目を作り、プロジェクトに取り込みます:
 
-1. Resonite で、Unit の雛形の `Main` スロットの下を編集します（マテリアル、レイアウト、コンポーネントなど）。値の props ごとに、Unit の `DV/Props` にある `Props.<名前>` の DynamicField を、動かしたいフィールドに向けます。
+1. Resonite で、Unit のテンプレートの `Main` スロットの下を編集します（マテリアル、レイアウト、コンポーネントなど）。値の props ごとに、Unit の `DV/Props` にある `Props.<名前>` の DynamicField を、動かしたいフィールドに向けます。
 2. オブジェクトを**公開インベントリのフォルダ**に保存し、そのフォルダの `resrec:///...` リンクをコピーします。
 3. プロジェクトで、そのフォルダの最新のアイテムを取得し、各 Unit の部分を `src/unit/<パッケージ>/<Unit>/ResFeedback.brson` に取り込みます:
 
@@ -211,21 +210,13 @@ server.listen(3100);
 
 取り込み時には、開発環境の接続先（`Static.Web.Host`、`http://` / `ws://` の URL）を空にします。中身が変わっていない Unit は書き換えません。
 
-## 部品の Resonite の版
+## Resonite のバージョン
 
-出力は、Resonite が別々の時期に保存した部品でできています。`@mirage-x/mirror` に同梱の core と frame、それに各 Unit の feedback です。
+`output.brson` は、Resonite が別々の時期に保存した `.brson` を組み合わせたものです。`@mirage-x/mirror` に同梱の core と frame、それに各 Unit の feedback です。
 
-- 出力の `VersionNumber` は一番古い部品のもので、`FeatureFlags` は全部品が持つものだけです。これで、Resonite は読み込み時に古い版で保存されたデータを変換します。変換は出力全体にかかるので、できるだけ部品の版を近づけてください。
-- `build` は、部品の版が 90 日より離れているとき、フィーチャーフラグを外したときや値が違うとき、部品の `TypeVersions` が出力と違うときに警告します。
-- feedback のない Unit は core の版を使い、出力の版を下げません。
-
-## UniPocket の MirageX からの移行
-
-- mirror の処理（`res()`）は `@mirage-x/mirror` の `build()` になりました。brson.js / VirtualObject の代わりに [`@frdt/frdt`](https://www.npmjs.com/package/@frdt/frdt) を使い、メモリの使用量が大きく減っています。
-- feedback は Resonite の `.brson`（`ResFeedback.brson`）です。JSON の feedback は読みません。各 Unit の feedback を Resonite から取り込み直してください（上の手順）。
-- 対応するのは `sync` プロトコルだけです。`tree` モードは廃止しました。
-- 実行時の部分は独立したパッケージになりました。`MirageXServer`（以前の `@mirage-x/core/server`）、`generateMain`、フック、`Logger` は `@mirage-x/server` から import します。Unit の定義は `@mirage-x/core` のままです。
-- `@uni-pocket/*` は不要です。
+- 出力の `VersionNumber` は core・frame・各 Unit のうち一番古いものに合わせ、`FeatureFlags` はそのすべてが持つものだけにします。これで、Resonite は読み込み時に古いバージョンで保存されたデータを変換します。変換は出力全体にかかるので、Unit の feedback は、できるだけ同梱の core に近いバージョンの Resonite で保存してください。
+- `build` は、それらのバージョンが 90 日より離れているとき、フィーチャーフラグを外したときや値が違うとき、core や Unit の `TypeVersions` が出力と違うときに警告します。
+- feedback のない Unit は core のバージョンを使い、出力のバージョンを下げません。
 
 ## サンプル
 
@@ -235,7 +226,7 @@ server.listen(3100);
 
 ## 開発
 
-Node.js `>=22.13` と [pnpm](https://pnpm.io) が必要です。pnpm の版はルートの `package.json` の `packageManager` で固定しています。最近の pnpm（10 以上）なら自動でその版に切り替わります。Corepack は不要です（Node.js 25 以降には同梱されていません）。
+Node.js `>=22.13` と [pnpm](https://pnpm.io) が必要です。pnpm のバージョンはルートの `package.json` の `packageManager` で固定しています。最近の pnpm（10 以上）なら自動でそのバージョンに切り替わります。Corepack は不要です（Node.js 25 以降には同梱されていません）。
 
 ```bash
 pnpm install
@@ -246,7 +237,7 @@ pnpm --filter @mirage-x/example-basic build:mirror
 pnpm --filter @mirage-x/example-basic start
 ```
 
-examples の `package.json` は npm の版の範囲で依存を書いています。このモノレポの中では、pnpm がローカルのパッケージにリンクします。
+examples の `package.json` は npm のバージョンの範囲で依存を書いています。このモノレポの中では、pnpm がローカルのパッケージにリンクします。
 
 CI（`.github/workflows/ci.yml`）は、プルリクエストごとに install、build、typecheck、test、examples の `build:mirror` を実行し、examples の出力を `examples/basic/baseline/output.brson` と構造と値で比べます（id とアプリのバージョンは比べません）。出力が変わる変更（新しい feedback や `mirror` の変更）では、同じプルリクエストで基準を更新してください:
 
@@ -279,18 +270,22 @@ examples/
    #   feedback:attach:frame:install  → assets/frame/installFrame/ResFeedback.brson
    ```
 
-取得したアイテムは、バイト列のまま `packages/mirror/scripts/feedback/ResFeedbackOriginal.brson`（gitignore）に置かれます。ルートの名前が `Holder` なら最初の子を使います。frame は `Static.FrameCode` が一致するとき（`Simple` / `InstalledAvatar`）だけ更新します。部品はビルド時に読むので、`mirror` をビルドし直す必要はありません。
+取得したアイテムは、バイト列のまま `packages/mirror/scripts/feedback/ResFeedbackOriginal.brson`（gitignore）に置かれます。ルートの名前が `Holder` なら最初の子を使います。frame は `Static.FrameCode` が一致するとき（`Simple` / `InstalledAvatar`）だけ更新します。core と frame はビルド時に読むので、`mirror` をビルドし直す必要はありません。
 
 ## リリース
 
-3 つのパッケージは、同じ版で一緒にリリースします。
+3 つのパッケージは、同じバージョンで一緒にリリースします。
 
-1. `packages/core/package.json`、`packages/server/package.json`、`packages/mirror/package.json`、`packages/core/src/version.ts` の版（と `examples/basic/package.json` の範囲）を変え、`CHANGELOG.md` に項目を足します。これを `master` にマージします。
-2. そのコミットに `v<版>` のタグを付けて push します（`git tag v0.1.0 && git push origin v0.1.0`）。
-3. `.github/workflows/release.yml` が、タグと各パッケージの版を照らし合わせ、ビルド、テスト、pack（`workspace:^` が実際の範囲になります）を行い、`@mirage-x/core`、`@mirage-x/server`、`@mirage-x/mirror` の順に npm provenance つきで公開します。認証は npm の trusted publishing（OIDC）で、トークンは保存しません。npmjs.com で、各パッケージの trusted publisher に GitHub Actions の `rheniumNV` / `mirage-x` / `release.yml` を設定しています。すでに npm にある版は飛ばします。
+1. `packages/core/package.json`、`packages/server/package.json`、`packages/mirror/package.json`、`packages/core/src/version.ts` のバージョン（と `examples/basic/package.json` の範囲）を変え、`CHANGELOG.md` に項目を足します。これを `master` にマージします。
+2. そのコミットに `v<バージョン>` のタグを付けて push します（`git tag v0.1.0 && git push origin v0.1.0`）。
+3. `.github/workflows/release.yml` が、タグと各パッケージのバージョンを照らし合わせ、ビルド、テスト、pack（`workspace:^` が実際の範囲になります）を行い、`@mirage-x/core`、`@mirage-x/server`、`@mirage-x/mirror` の順に npm provenance つきで公開します。認証は npm の trusted publishing（OIDC）で、トークンは保存しません。npmjs.com で、各パッケージの trusted publisher に GitHub Actions の `rheniumNV` / `mirage-x` / `release.yml` を設定しています。すでに npm にあるバージョンは飛ばします。
 
 trusted publisher は、すでに存在するパッケージにしか設定できず、設定してから 2 日以内に公開しないと無効になります。そのため 0.1.0 は手で公開し、trusted publisher は次のリリースの直前に設定します。設定がない場合は、リポジトリの `NPM_TOKEN` シークレットがあればそれを使います。
 
 ## ライセンス
 
 [MIT](LICENSE)
+
+## 生成 AI を使った開発
+
+このプロジェクトは、生成 AI のコーディングツール（Claude Code）を使って開発しています。変更はメンテナーが確認し、Resonite での動作も含めてテストしています。

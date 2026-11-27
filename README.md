@@ -6,8 +6,7 @@ Server-side React framework that syncs a Unit tree to a Resonite-side mirror ove
 
 You write a Resonite UI (or any object tree) as React components running on a Node.js server. The object you place in Resonite connects to that server and mirrors the tree: when the React state changes, Resonite updates.
 
-- Status: `0.x`, extracted from UniPocket's MirageX. APIs may change; a minor version (0.1 → 0.2) may break them. See [CHANGELOG.md](CHANGELOG.md).
-- This project is developed with generative AI coding tools (Claude Code). Changes are reviewed and tested by the maintainer, including in Resonite.
+Status: `0.x`. APIs may change; a minor version (0.1 → 0.2) may break them. See [CHANGELOG.md](CHANGELOG.md).
 
 ## How it works
 
@@ -191,7 +190,7 @@ A new Unit's template is empty. You give it its look in Resonite and pull it bac
 
 1. In Resonite, edit the Unit's template under its `Main` slot (materials, layout, components …). For each value prop, point the `Props.<name>` dynamic field in the Unit's `DV/Props` at the field it should drive.
 2. Save the object into a **public inventory folder** and copy the folder's `resrec:///...` link.
-3. In your project, fetch the latest item in that folder and attach each Unit's part to `src/unit/<Package>/<Unit>/ResFeedback.brson`:
+3. In your project, fetch the latest item in that folder and attach each Unit's template to `src/unit/<Package>/<Unit>/ResFeedback.brson`:
 
    ```ts
    // src/dev/resFeedback/feedbackUnit.ts
@@ -211,21 +210,13 @@ A new Unit's template is empty. You give it its look in Resonite and pull it bac
 
 On attach, the developer's local connection settings (`Static.Web.Host`, `http://` / `ws://` URLs) are cleared, and a Unit whose content did not change is not rewritten.
 
-## Resonite versions of the parts
+## Resonite versions
 
-The output is made of parts saved by Resonite at different times: the core and frame bundled in `@mirage-x/mirror`, and each Unit's feedback.
+`output.brson` combines `.brson` files saved by Resonite at different times: the core and frame bundled in `@mirage-x/mirror`, and each Unit's feedback.
 
-- The output's `VersionNumber` is the oldest part's, and its `FeatureFlags` are the ones every part has, so Resonite converts data saved by older versions when it loads the output. That conversion runs on the whole output, so keep the parts close to each other when you can.
-- `build` warns when the parts are more than 90 days apart, when a feature flag is left out or differs, and when a part's `TypeVersions` entry differs from the output's.
+- The output's `VersionNumber` is the oldest of the core's, the frame's and the Units', and its `FeatureFlags` are the ones all of them have, so Resonite converts data saved by older versions when it loads the output. That conversion runs on the whole output, so save your Units' feedback with a Resonite version close to the bundled core's when you can.
+- `build` warns when their versions are more than 90 days apart, when a feature flag is left out or differs, and when the core's or a Unit's `TypeVersions` entry differs from the output's.
 - A Unit without feedback takes the core's version and does not lower the output's.
-
-## Migrating from UniPocket's MirageX
-
-- The mirror pipeline (`res()`) is now `build()` from `@mirage-x/mirror`. It uses [`@frdt/frdt`](https://www.npmjs.com/package/@frdt/frdt) instead of brson.js / VirtualObject and uses much less memory.
-- Feedback is Resonite `.brson` (`ResFeedback.brson`); JSON feedback is no longer read. Re-attach each Unit's feedback from Resonite (see above).
-- Only the `sync` protocol is supported; the `tree` mode was removed.
-- The runtime is its own package: `MirageXServer` (formerly `@mirage-x/core/server`), `generateMain`, the hooks and `Logger` are imported from `@mirage-x/server`. Unit definitions stay in `@mirage-x/core`.
-- `@uni-pocket/*` is not needed.
 
 ## Examples
 
@@ -279,7 +270,7 @@ examples/
    #   feedback:attach:frame:install  → assets/frame/installFrame/ResFeedback.brson
    ```
 
-The fetched item is staged as `packages/mirror/scripts/feedback/ResFeedbackOriginal.brson` (gitignored), byte for byte. A root named `Holder` is unwrapped. A frame is updated only when its `Static.FrameCode` matches (`Simple` / `InstalledAvatar`). Parts are read at build time, so `mirror` does not need rebuilding.
+The fetched item is staged as `packages/mirror/scripts/feedback/ResFeedbackOriginal.brson` (gitignored), byte for byte. A root named `Holder` is unwrapped. A frame is updated only when its `Static.FrameCode` matches (`Simple` / `InstalledAvatar`). The core and frames are read at build time, so `mirror` does not need rebuilding.
 
 ## Release
 
@@ -294,3 +285,7 @@ A trusted publisher can only be added to a package that already exists, and a ne
 ## License
 
 [MIT](LICENSE)
+
+## Development with generative AI
+
+This project is developed with generative AI coding tools (Claude Code). Changes are reviewed and tested by the maintainer, including in Resonite.
