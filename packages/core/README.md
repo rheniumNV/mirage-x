@@ -1,33 +1,23 @@
 # @mirage-x/core
 
-MirageX React runtime for Resonite UIX apps.
+The run-time half of [MirageX](https://github.com/rheniumNV/mirage-x#readme), a server-side React framework that syncs a Unit tree to a Resonite-side mirror over WebSocket.
 
-## Install
+It provides:
+
+- Unit definitions: `generateUnitConfig`, `UnitProp`, `UnitRef`, `generateMain` (a Unit as a React component)
+- `MirageXServer` (`@mirage-x/core/server`): renders your React app and sends its changes to the mirror in Resonite
+- Hooks and helpers: `useMirrorRef`, `useBoundCallback`, `useMainRootContext`, `FunctionEnv`, `Logger`
+
+An app also needs [`@mirage-x/mirror`](https://www.npmjs.com/package/@mirage-x/mirror), which builds the object you place in Resonite. **See the [MirageX README](https://github.com/rheniumNV/mirage-x#readme) for how to use them together**, and [`examples/basic`](https://github.com/rheniumNV/mirage-x/tree/master/examples/basic) for a complete app.
 
 ```bash
-pnpm add @mirage-x/core react@18   # or: npm install @mirage-x/core react@18
+npm install @mirage-x/core @mirage-x/mirror react@18
 ```
 
-`react` (18) is a peer dependency: your Units and the runtime must share one React. Requires Node.js 22 or later.
+Node.js 22 or later, ESM only. `react` 18 is a peer dependency.
 
-## Exports
+This project is developed with generative AI coding tools (Claude Code); changes are reviewed and tested by the maintainer.
 
-| Entry | Contents |
-| --- | --- |
-| `@mirage-x/core` | App APIs: `generateMain`, `UnitProp`, `UnitRef`, `generateUnitConfig`, `FunctionEnv`, `useBoundCallback`, `useMirrorRef`, `noop`, `useMainRootContext`, `Logger`, `version` |
-| `@mirage-x/core/server` | `MirageXServer` (+ config types) |
+## License
 
-## Slot references
-
-- Every Unit: `rootSlotRef` → wire `option: { refType: "RootSlot" }`
-- `refsConfig` + `UnitRef.Slot()` → `DV/Refs.*` and wire `option: { refType: "Slot", refKey }`
-- Consumer: `UnitProp.Slot()` → `Props.*` DRV
-
-See [docs/reference-prop.md](docs/reference-prop.md).
-
-## Notes
-
-- ESM only (`"type": "module"`).
-- Only the `sync` protocol is supported. The client's `init` may send `eventType: "sync"` or omit it; any other value (the removed `tree` mode) is rejected and the socket is closed.
-- No dependency on `@uni-pocket/*`; `Logger` lives in this package.
-- Unit/res mirror tooling, client attach scripts, and web preview from UniPocket MirageX are intentionally omitted.
+MIT
