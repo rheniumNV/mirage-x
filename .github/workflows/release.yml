@@ -67,13 +67,19 @@ jobs:
           done
           ls -l "$RUNNER_TEMP/pack"
 
-      # core first: mirror depends on it.
-      # Authenticates with npm trusted publishing (OIDC, no token) once each
-      # package has this workflow as its trusted publisher on npmjs.com. Until
-      # then (the very first publish) npm falls back to the NPM_TOKEN secret.
+      # core first: mirror depends on it. A version already on npm (e.g.
+      # published by hand) is skipped, so pushing its tag does not fail.
+      # Authenticates with npm trusted publishing (OIDC, no token); npm falls
+      # back to the NPM_TOKEN secret when trusted publishing is not set up.
       - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          npm publish "$RUNNER_TEMP/pack/mirage-x-core-${GITHUB_REF_NAME#v}.tgz" --access public --provenance
-          npm publish "$RUNNER_TEMP/pack/mirage-x-mirror-${GITHUB_REF_NAME#v}.tgz" --access public --provenance
+          version="${GITHUB_REF_NAME#v}"
+          for name in core mirror; do
+            if [ "$(npm view "@mirage-x/$name@$version" version 2>/dev/null)" = "$version" ]; then
+              echo "@mirage-x/$name@$version is already on npm; skipped"
+              continue
+            fi
+            npm publish "$RUNNER_TEMP/pack/mirage-x-$name-$version.tgz" --access public --provenance
+          done
