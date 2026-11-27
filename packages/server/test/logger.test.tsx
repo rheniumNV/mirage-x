@@ -7,13 +7,19 @@ import { render } from "../src/server/render.js";
 import { LogContext, Logger, useLogger } from "../src/index.js";
 
 /**
- * Wait until `done()` (the renderer may render later than the call, e.g.
- * while another root's work is pending), failing after `timeoutMs`.
+ * Wait until `done()`: React may run the render later than the call. Throws
+ * `message` after `timeoutMs`.
  */
-const until = async (done: () => boolean, timeoutMs = 2000) => {
+const until = async (
+  done: () => boolean,
+  message: string,
+  timeoutMs = 2000,
+) => {
   const start = Date.now();
   while (!done()) {
-    if (Date.now() - start > timeoutMs) return;
+    if (Date.now() - start > timeoutMs) {
+      throw new Error(`timed out: ${message}`);
+    }
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
 };
@@ -34,7 +40,7 @@ describe("useLogger / LogContext", () => {
         </LogContext>
       </LoggerProvider>,
     );
-    await until(() => seen.length >= 2);
+    await until(() => seen.length >= 2, "both probes rendered with a logger");
     const app = seen.find((s) => s.where === "app")?.logger;
     const child = seen.find((s) => s.where === "child")?.logger;
     assert.equal(app, root);
@@ -61,8 +67,7 @@ describe("useLogger / LogContext", () => {
         platformApiUrl="http://127.0.0.1:9/"
       />,
     );
-    await until(() => seen.length > 0);
-    assert.ok(seen.length > 0, "App was not rendered");
+    await until(() => seen.length > 0, "App rendered with a logger");
     assert.ok(seen.every((l) => l === logger));
   });
 
@@ -79,8 +84,7 @@ describe("useLogger / LogContext", () => {
       return null;
     };
     DummyReactRenderer.render(<Probe />);
-    await until(() => caught.length > 0);
-    assert.ok(caught.length > 0, "Probe was not rendered");
+    await until(() => caught.length > 0, "useLogger threw outside a provider");
     assert.ok(
       caught.every(
         (e) => e instanceof Error && e.message === "Logger is not provided",
