@@ -239,7 +239,7 @@ pnpm --filter @mirage-x/example-basic start
 
 Example `package.json` files use npm semver ranges. Inside this monorepo, pnpm links them to the local packages.
 
-CI (`.github/workflows/ci.yml`) runs install, build, typecheck, test and the example `build:mirror` on every pull request, then compares the example output with `examples/basic/baseline/output.brson` by structure and values (ids and the app version are not compared). When a change is meant to change the output (new feedback, a change in `mirror`), update the baseline in the same pull request:
+CI (`.github/workflows/ci.yml`) runs install, build, typecheck, test and the example `build:mirror` on every pull request and on pushes to `master` and `develop`, then compares the example output with `examples/basic/baseline/output.brson` by structure and values (ids and the app version are not compared). When a change is meant to change the output (new feedback, a change in `mirror`), update the baseline in the same pull request:
 
 ```bash
 pnpm --filter @mirage-x/example-basic build:mirror
@@ -274,13 +274,13 @@ The fetched item is staged as `packages/mirror/scripts/feedback/ResFeedbackOrigi
 
 ## Release
 
-Work goes into `develop` through pull requests. When `develop` has what the next version needs, it is merged into `master` and released from there.
+Work goes into `develop` through pull requests (open them against `develop`, not `master`). When `develop` has what the next version needs, it is merged into `master` and released from there.
 
 All three packages are released together with the same version.
 
 1. On `develop`, set `version` in `packages/core/package.json`, `packages/server/package.json`, `packages/mirror/package.json` and `packages/core/src/version.ts` (and the ranges in `examples/basic/package.json`), and add the entry to `CHANGELOG.md`. Then merge `develop` into `master`.
-2. Push a tag `v<version>` on the merge commit on `master` (`git tag v0.1.0 && git push origin v0.1.0`).
-3. `.github/workflows/release.yml` checks the tag against the versions, builds, tests, packs (`workspace:^` becomes the real range) and publishes `@mirage-x/core`, `@mirage-x/server`, then `@mirage-x/mirror`, with npm provenance. It authenticates with npm trusted publishing (OIDC), so no token is stored: on npmjs.com, each package has GitHub Actions `rheniumNV` / `mirage-x` / `release.yml` as its trusted publisher. A version that is already on npm is skipped.
+2. Push a tag `v<version>` on the merge commit on `master`: `git switch master && git pull && git tag v0.1.0 && git push origin v0.1.0`.
+3. `.github/workflows/release.yml` checks that the tagged commit is on `master` and the tag matches the versions, builds, tests, packs (`workspace:^` becomes the real range) and publishes `@mirage-x/core`, `@mirage-x/server`, then `@mirage-x/mirror`, with npm provenance. It authenticates with npm trusted publishing (OIDC), so no token is stored: on npmjs.com, each package has GitHub Actions `rheniumNV` / `mirage-x` / `release.yml` as its trusted publisher. A version that is already on npm is skipped.
 
 A trusted publisher can only be added to a package that already exists, and a new one expires unless it publishes within 2 days. So 0.1.0 was published by hand, and the trusted publishers are added right before the next release.
 
