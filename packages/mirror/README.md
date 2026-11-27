@@ -1,3 +1,5 @@
+[English](https://github.com/rheniumNV/mirage-x/blob/master/packages/mirror/README.md) | [日本語](https://github.com/rheniumNV/mirage-x/blob/master/packages/mirror/README.ja.md)
+
 # @mirage-x/mirror
 
 The build-time half of [MirageX](https://github.com/rheniumNV/mirage-x#readme), a server-side React framework that syncs a Unit tree to a Resonite-side mirror over WebSocket.

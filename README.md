@@ -1,3 +1,5 @@
+[English](README.md) | [日本語](README.ja.md)
+
 # MirageX
 
 Server-side React framework that syncs a Unit tree to a Resonite-side mirror over WebSocket.
@@ -10,15 +12,14 @@ You write a Resonite UI (or any object tree) as React components running on a No
 ## How it works
 
 ```text
- build time                                    run time
-┌─────────────────────────────┐              ┌───────────────────────────┐
-│ @mirage-x/mirror            │  output.brson │ Resonite                  │
-│  Units' Resonite templates  │ ───────────▶ │  the mirror object        │
-│  (ResFeedback.brson)        │   (drag in)   │   │ WebSocket (sync)      │
-│  + bundled core / frame     │              │   ▼                       │
-└─────────────────────────────┘              │ @mirage-x/core server     │
-                                             │  your React app (Units)   │
-                                             └───────────────────────────┘
+[build time] @mirage-x/mirror
+  Units' Resonite templates (ResFeedback.brson) + bundled core / frame
+        │ output.brson (drag into Resonite)
+        ▼
+[Resonite] the mirror object
+        │ WebSocket (sync)
+        ▼
+[run time] @mirage-x/core server (your React app)
 ```
 
 - A **Unit** is one kind of Resonite object (a text, an image, a panel …) with typed props. In React it is a component; in Resonite it is a template slot.

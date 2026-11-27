@@ -25,6 +25,7 @@
     "dist",
     "assets/**/*.brson",
     "README.md",
+    "README.ja.md",
     "LICENSE"
   ],
   "exports": {
