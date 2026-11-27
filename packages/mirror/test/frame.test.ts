@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { pathToFileURL } from "node:url";
 
 import { compare, type Document } from "@frdt/frdt";
 import { UnitProp, generateUnitConfig } from "@mirage-x/core";
@@ -60,6 +61,13 @@ describe("frames from your own feedback", () => {
   it("generateInstallFrameFromFeedback(path) builds what generateInstallFrame builds", () => {
     assert.deepEqual(
       compare(client(generateInstallFrame), client(generateInstallFrameFromFeedback(INSTALL))),
+      [],
+    );
+  });
+
+  it("takes a file URL", () => {
+    assert.deepEqual(
+      compare(client(generateSimpleFrame), client(generateSimpleFrameFromFeedback(pathToFileURL(SIMPLE)))),
       [],
     );
   });
