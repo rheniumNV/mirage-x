@@ -8,7 +8,7 @@ on:
 
 permissions:
   contents: read
-  # npm provenance (links each published version to this workflow run).
+  # npm trusted publishing (OIDC) and provenance.
   id-token: write
 
 jobs:
@@ -25,6 +25,10 @@ jobs:
           node-version: 22
           cache: pnpm
           registry-url: https://registry.npmjs.org
+
+      # Trusted publishing (OIDC) needs npm 11.5.1 or later; Node 22 ships npm 10.
+      - name: Update npm
+        run: npm install -g npm@11
 
       - name: Check the tag matches the package versions
         run: |
@@ -64,6 +68,9 @@ jobs:
           ls -l "$RUNNER_TEMP/pack"
 
       # core first: mirror depends on it.
+      # Authenticates with npm trusted publishing (OIDC, no token) once each
+      # package has this workflow as its trusted publisher on npmjs.com. Until
+      # then (the very first publish) npm falls back to the NPM_TOKEN secret.
       - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -66,4 +66,6 @@ Both packages are released together with the same version.
 
 1. Set `version` in `packages/core/package.json`, `packages/mirror/package.json` and `packages/core/src/version.ts` (and the ranges in `examples/basic/package.json`), and add the entry to `CHANGELOG.md`. Merge this to `master`.
 2. Push a tag `v<version>` on that commit (`git tag v0.1.0 && git push origin v0.1.0`).
-3. `.github/workflows/release.yml` checks the tag against both versions, builds, tests, packs (`workspace:^` becomes the real range) and publishes `@mirage-x/core`, then `@mirage-x/mirror`, with npm provenance. It needs the `NPM_TOKEN` repository secret (an npm token allowed to publish `@mirage-x/*`).
+3. `.github/workflows/release.yml` checks the tag against both versions, builds, tests, packs (`workspace:^` becomes the real range) and publishes `@mirage-x/core`, then `@mirage-x/mirror`, with npm provenance. It authenticates with npm trusted publishing (OIDC): on npmjs.com, each package (`@mirage-x/core`, `@mirage-x/mirror`) has `rheniumNV/mirage-x`, workflow `release.yml`, as its trusted publisher, so no token is stored.
+
+A trusted publisher can only be set on a package that already exists, so the very first publish used an `NPM_TOKEN` repository secret (npm falls back to it when OIDC is not set up). Remove the secret once trusted publishing is configured.
