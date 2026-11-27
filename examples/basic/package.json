@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "build:mirror": "tsx src/build-mirror.ts",
+    "check:output": "tsx src/dev/checkOutput.ts",
+    "baseline:update": "tsx src/dev/checkOutput.ts --update",
     "start": "tsx src/server.ts",
     "dev": "tsx watch src/server.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",

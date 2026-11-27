@@ -32,7 +32,14 @@ pnpm --filter @mirage-x/example-basic build:mirror
 pnpm --filter @mirage-x/example-basic start
 ```
 
-CI (`.github/workflows/ci.yml`) runs install, build, typecheck, test and the example `build:mirror` on every pull request.
+CI (`.github/workflows/ci.yml`) runs install, build, typecheck, test and the example `build:mirror` on every pull request, then compares the example output with `examples/basic/baseline/output.brson` by structure and values (ids and the app version are not compared).
+
+When a change is meant to change the output (new feedback, a change in `mirror`), update the baseline in the same pull request:
+
+```bash
+pnpm --filter @mirage-x/example-basic build:mirror
+pnpm --filter @mirage-x/example-basic baseline:update
+```
 
 Then drag `examples/basic/output/output.brson` into Resonite. See [examples/basic/README.md](examples/basic/README.md).
 
