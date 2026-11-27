@@ -69,11 +69,9 @@ jobs:
 
       # core first: server and mirror depend on it. A version already on npm (e.g.
       # published by hand) is skipped, so pushing its tag does not fail.
-      # Authenticates with npm trusted publishing (OIDC, no token); npm falls
-      # back to the NPM_TOKEN secret when trusted publishing is not set up.
+      # Authenticates with npm trusted publishing (OIDC): each package lists
+      # this workflow as its trusted publisher on npmjs.com. No token is used.
       - name: Publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           version="${GITHUB_REF_NAME#v}"
           for name in core server mirror; do

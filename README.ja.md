@@ -280,7 +280,7 @@ examples/
 2. そのコミットに `v<バージョン>` のタグを付けて push します（`git tag v0.1.0 && git push origin v0.1.0`）。
 3. `.github/workflows/release.yml` が、タグと各パッケージのバージョンを照らし合わせ、ビルド、テスト、pack（`workspace:^` が実際の範囲になります）を行い、`@mirage-x/core`、`@mirage-x/server`、`@mirage-x/mirror` の順に npm provenance つきで公開します。認証は npm の trusted publishing（OIDC）で、トークンは保存しません。npmjs.com で、各パッケージの trusted publisher に GitHub Actions の `rheniumNV` / `mirage-x` / `release.yml` を設定しています。すでに npm にあるバージョンは飛ばします。
 
-trusted publisher は、すでに存在するパッケージにしか設定できず、設定してから 2 日以内に公開しないと無効になります。そのため 0.1.0 は手で公開し、trusted publisher は次のリリースの直前に設定します。設定がない場合は、リポジトリの `NPM_TOKEN` シークレットがあればそれを使います。
+trusted publisher は、すでに存在するパッケージにしか設定できず、設定してから 2 日以内に公開しないと無効になります。そのため 0.1.0 は手で公開し、trusted publisher は次のリリースの直前に設定します。
 
 ## ライセンス
 

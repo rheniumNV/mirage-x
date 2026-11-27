@@ -280,7 +280,7 @@ All three packages are released together with the same version.
 2. Push a tag `v<version>` on that commit (`git tag v0.1.0 && git push origin v0.1.0`).
 3. `.github/workflows/release.yml` checks the tag against the versions, builds, tests, packs (`workspace:^` becomes the real range) and publishes `@mirage-x/core`, `@mirage-x/server`, then `@mirage-x/mirror`, with npm provenance. It authenticates with npm trusted publishing (OIDC), so no token is stored: on npmjs.com, each package has GitHub Actions `rheniumNV` / `mirage-x` / `release.yml` as its trusted publisher. A version that is already on npm is skipped.
 
-A trusted publisher can only be added to a package that already exists, and a new one expires unless it publishes within 2 days. So 0.1.0 was published by hand, and the trusted publishers are added right before the next release. Without them, npm falls back to an `NPM_TOKEN` repository secret if one is set.
+A trusted publisher can only be added to a package that already exists, and a new one expires unless it publishes within 2 days. So 0.1.0 was published by hand, and the trusted publishers are added right before the next release.
 
 ## License
 
