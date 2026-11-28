@@ -7,7 +7,7 @@
 - `build()`: Unit の Resonite 側のテンプレートと、MirageX の core、frame をまとめて、Resonite に置くオブジェクト `output.brson` を作ります
 - `generateMirrorUnitFromFeedback`: Unit のテンプレートを作ります。feedback（`ResFeedback.brson`）があればそれを使います
 - feedback: `fetchFeedback` と `attachUnits` で、Resonite で作り込んだ Unit をプロジェクトに取り込みます
-- 同梱の core と frame（`generateSimpleFrame`、`generateInstallFrame`）
+- 同梱の core と frame（`generateSimpleFrame`、`generateInstallFrame`）と、独自の frame の feedback から作る frame（`generateSimpleFrameFromFeedback`、`generateInstallFrameFromFeedback`、`placeCore`）
 
 文書の読み書きには [`@frdt/frdt`](https://www.npmjs.com/package/@frdt/frdt) を使っています。`@mirage-x/server` には依存しないので、ビルドする環境にサーバーの依存は要りません。
 

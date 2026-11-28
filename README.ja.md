@@ -34,7 +34,7 @@ Resonite の UI（やオブジェクトのツリー）を、Node.js のサーバ
 | パッケージ | 役割 |
 | --- | --- |
 | [`@mirage-x/core`](packages/core) | 共有: Unit の定義（`generateUnitConfig`、`UnitProp`、`UnitRef`）、`MirrorRef`、同期のプロトコルの型 |
-| [`@mirage-x/server`](packages/server) | 実行時: `MirageXServer`、`generateMain`（Unit を React のコンポーネントにする）、フック（`useMirrorRef`、`useBoundCallback`、`useMainRootContext`）、`Logger` |
+| [`@mirage-x/server`](packages/server) | 実行時: `MirageXServer`、`generateMain`（Unit を React のコンポーネントにする）、フック（`useMirrorRef`、`useBoundCallback`、`useMainRootContext`、`useLogger`）、`Logger`、`LogContext` |
 | [`@mirage-x/mirror`](packages/mirror) | ビルド時: `build()` → `output.brson`、feedback（`fetchFeedback`、`attachUnits`） |
 
 アプリでは 3 つとも使います。各 Unit の `detail.ts` は `@mirage-x/core` を、`main.tsx` とアプリは `@mirage-x/server` を、`mirror.ts` とビルド用スクリプトは `@mirage-x/mirror` を import します。[`examples/basic`](examples/basic) が完成したアプリの例で、以下の手順もこれに沿っています。
@@ -139,6 +139,8 @@ await build(
 );
 ```
 
+独自の frame（Resonite で保存した frame の feedback で、同梱のものと同じく、ルートにプレースホルダーを指す `Static.AppRoot` と `DV` スロットを持つもの。install frame はさらに `Static.PanelRoot` も持つもの）を使うときは、代わりに `generateSimpleFrameFromFeedback(new URL("./frame/ResFeedback.brson", import.meta.url))`（または `generateInstallFrameFromFeedback`）を渡します。そのファイルは、`Static.FrameCode` が `Simple` / `InstalledAvatar` なら、取得した feedback から `attachSimpleFrame` / `attachInstallFrame` で作れます（別のコードなら警告して何も書かず、`Static.FrameCode` がなければエラーになります）。細かく制御したいときは、`placeCore(frame, { core, env }, (placeholder) => 親)` で、返したスロットの下に core を置けます。プレースホルダーの親は `parentOf(frame, placeholder)` で探せます。
+
 `output/output.brson` と `output/version.json` が書き出されます。出力が変わっていなければ、何も書き込みません。Unit やその feedback を変えたら、ビルドし直してください。
 
 ### 4. サーバーを起動する
@@ -217,6 +219,7 @@ server.listen(3100);
 - 出力の `VersionNumber` は core・frame・各 Unit のうち一番古いものに合わせ、`FeatureFlags` はそのすべてが持つものだけにします。これで、Resonite は読み込み時に古いバージョンで保存されたデータを変換します。変換は出力全体にかかるので、Unit の feedback は、できるだけ同梱の core に近いバージョンの Resonite で保存してください。
 - `build` は、それらのバージョンが 90 日より離れているとき、フィーチャーフラグを外したときや値が違うとき、core や Unit の `TypeVersions` が出力と違うときに警告します。
 - feedback のない Unit は core のバージョンを使い、出力のバージョンを下げません。
+- 代わりに frame の `VersionNumber` と `FeatureFlags` をそのまま使うには、`build` の設定で `versionSource: "frame"` を指定します（既定は `"oldest"`）。この場合、core や Unit にある古いバージョンの Resonite で保存されたデータは変換されません。`build` は、frame と違うフラグについて警告します。バージョンが 90 日より離れているときと、`TypeVersions` が違うときの警告も出ます。
 
 ## サンプル
 
@@ -239,7 +242,7 @@ pnpm --filter @mirage-x/example-basic start
 
 examples の `package.json` は npm のバージョンの範囲で依存を書いています。このモノレポの中では、pnpm がローカルのパッケージにリンクします。
 
-CI（`.github/workflows/ci.yml`）は、プルリクエストごとに install、build、typecheck、test、examples の `build:mirror` を実行し、examples の出力を `examples/basic/baseline/output.brson` と構造と値で比べます（id とアプリのバージョンは比べません）。出力が変わる変更（新しい feedback や `mirror` の変更）では、同じプルリクエストで基準を更新してください:
+CI（`.github/workflows/ci.yml`）は、プルリクエストごとと `master`・`develop` への push のたびに install、build、typecheck、test、examples の `build:mirror` を実行し、examples の出力を `examples/basic/baseline/output.brson` と構造と値で比べます（id とアプリのバージョンは比べません）。出力が変わる変更（新しい feedback や `mirror` の変更）では、同じプルリクエストで基準を更新してください:
 
 ```bash
 pnpm --filter @mirage-x/example-basic build:mirror
@@ -274,11 +277,21 @@ examples/
 
 ## リリース
 
+作業はプルリクエストで `develop` に入れます（プルリクエストの向き先は `master` ではなく `develop` にします）。次のバージョンに必要な変更が `develop` に揃ったら、`master` にマージしてそこからリリースします。
+
 3 つのパッケージは、同じバージョンで一緒にリリースします。
 
-1. `packages/core/package.json`、`packages/server/package.json`、`packages/mirror/package.json`、`packages/core/src/version.ts` のバージョン（と `examples/basic/package.json` の範囲）を変え、`CHANGELOG.md` に項目を足します。これを `master` にマージします。
-2. そのコミットに `v<バージョン>` のタグを付けて push します（`git tag v0.1.0 && git push origin v0.1.0`）。
-3. `.github/workflows/release.yml` が、タグと各パッケージのバージョンを照らし合わせ、ビルド、テスト、pack（`workspace:^` が実際の範囲になります）を行い、`@mirage-x/core`、`@mirage-x/server`、`@mirage-x/mirror` の順に npm provenance つきで公開します。認証は npm の trusted publishing（OIDC）で、トークンは保存しません。npmjs.com で、各パッケージの trusted publisher に GitHub Actions の `rheniumNV` / `mirage-x` / `release.yml` を設定しています。すでに npm にあるバージョンは飛ばします。
+1. `develop` で、`packages/core/package.json`、`packages/server/package.json`、`packages/mirror/package.json`、`packages/core/src/version.ts` のバージョン（と `examples/basic/package.json` の範囲）を変え、`CHANGELOG.md` に項目を足します。そのうえで `develop` から `master` へのプルリクエストを作り、マージコミットでマージします（squash や rebase にはしません。`develop` と `master` の履歴を揃えておくためです）。
+2. npmjs.com で各パッケージに trusted publisher をまだ設定していなければ（下記）、ここで設定します。そのうえで、`master` のマージコミットに `v<バージョン>`（例: `v0.1.1`）のタグを付けて push します:
+
+   ```bash
+   git switch master
+   git pull
+   git tag v<バージョン>
+   git push origin v<バージョン>
+   ```
+
+3. `.github/workflows/release.yml` が、タグの付いたコミットが `master` にあることと、タグと各パッケージのバージョンが一致することを確かめ、ビルド、テスト、pack（`workspace:^` が実際の範囲になります）を行い、`@mirage-x/core`、`@mirage-x/server`、`@mirage-x/mirror` の順に npm provenance つきで公開します。認証は npm の trusted publishing（OIDC）で、トークンは保存しません。npmjs.com で、各パッケージの trusted publisher に GitHub Actions の `rheniumNV` / `mirage-x` / `release.yml` を設定しています。すでに npm にあるバージョンは飛ばします。
 
 trusted publisher は、すでに存在するパッケージにしか設定できず、設定してから 2 日以内に公開しないと無効になります。そのため 0.1.0 は手で公開し、trusted publisher は次のリリースの直前に設定します。
 

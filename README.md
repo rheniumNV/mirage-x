@@ -34,7 +34,7 @@ Status: `0.x`. APIs may change; a minor version (0.1 → 0.2) may break them. Se
 | Package | Role |
 | --- | --- |
 | [`@mirage-x/core`](packages/core) | Shared: Unit definitions (`generateUnitConfig`, `UnitProp`, `UnitRef`), `MirrorRef`, the sync protocol types |
-| [`@mirage-x/server`](packages/server) | Run time: `MirageXServer`, `generateMain` (a Unit as a React component), hooks (`useMirrorRef`, `useBoundCallback`, `useMainRootContext`), `Logger` |
+| [`@mirage-x/server`](packages/server) | Run time: `MirageXServer`, `generateMain` (a Unit as a React component), hooks (`useMirrorRef`, `useBoundCallback`, `useMainRootContext`, `useLogger`), `Logger`, `LogContext` |
 | [`@mirage-x/mirror`](packages/mirror) | Build time: `build()` → `output.brson`; feedback (`fetchFeedback`, `attachUnits`) |
 
 An app uses all three: each Unit's `detail.ts` imports `@mirage-x/core`, its `main.tsx` and the app import `@mirage-x/server`, and its `mirror.ts` and the build script import `@mirage-x/mirror`. [`examples/basic`](examples/basic) is a complete app; the steps below follow it.
@@ -139,6 +139,8 @@ await build(
 );
 ```
 
+To use your own frame (a frame feedback saved from Resonite, built like the bundled ones: a `Static.AppRoot` reference to the placeholder and a `DV` slot on the root, plus `Static.PanelRoot` for an install frame), pass `generateSimpleFrameFromFeedback(new URL("./frame/ResFeedback.brson", import.meta.url))` (or `generateInstallFrameFromFeedback`) instead. `attachSimpleFrame` / `attachInstallFrame` make that file from a fetched feedback when its `Static.FrameCode` is `Simple` / `InstalledAvatar` (with another code they warn and write nothing; without one they fail). For full control, `placeCore(frame, { core, env }, (placeholder) => parent)` puts the core into a frame document under the slot you return; `parentOf(frame, placeholder)` finds the placeholder's parent.
+
 This writes `output/output.brson` and `output/version.json`. When the output has not changed, nothing is written. Rebuild after changing Units or their feedback.
 
 ### 4. Start the server
@@ -217,6 +219,7 @@ On attach, the developer's local connection settings (`Static.Web.Host`, `http:/
 - The output's `VersionNumber` is the oldest of the core's, the frame's and the Units', and its `FeatureFlags` are the ones all of them have, so Resonite converts data saved by older versions when it loads the output. That conversion runs on the whole output, so save your Units' feedback with a Resonite version close to the bundled core's when you can.
 - `build` warns when their versions are more than 90 days apart, when a feature flag is left out or differs, and when the core's or a Unit's `TypeVersions` entry differs from the output's.
 - A Unit without feedback takes the core's version and does not lower the output's.
+- To write the frame's `VersionNumber` and `FeatureFlags` as they are instead, set `versionSource: "frame"` in the `build` config (the default is `"oldest"`). Data saved by older Resonite versions in the core or the Units is then not converted; `build` warns about the flags that differ from the frame's, and still warns when the versions are more than 90 days apart and when `TypeVersions` differ.
 
 ## Examples
 
@@ -239,7 +242,7 @@ pnpm --filter @mirage-x/example-basic start
 
 Example `package.json` files use npm semver ranges. Inside this monorepo, pnpm links them to the local packages.
 
-CI (`.github/workflows/ci.yml`) runs install, build, typecheck, test and the example `build:mirror` on every pull request, then compares the example output with `examples/basic/baseline/output.brson` by structure and values (ids and the app version are not compared). When a change is meant to change the output (new feedback, a change in `mirror`), update the baseline in the same pull request:
+CI (`.github/workflows/ci.yml`) runs install, build, typecheck, test and the example `build:mirror` on every pull request and on pushes to `master` and `develop`, then compares the example output with `examples/basic/baseline/output.brson` by structure and values (ids and the app version are not compared). When a change is meant to change the output (new feedback, a change in `mirror`), update the baseline in the same pull request:
 
 ```bash
 pnpm --filter @mirage-x/example-basic build:mirror
@@ -274,11 +277,21 @@ The fetched item is staged as `packages/mirror/scripts/feedback/ResFeedbackOrigi
 
 ## Release
 
+Work goes into `develop` through pull requests (open them against `develop`, not `master`). When `develop` has what the next version needs, it is merged into `master` and released from there.
+
 All three packages are released together with the same version.
 
-1. Set `version` in `packages/core/package.json`, `packages/server/package.json`, `packages/mirror/package.json` and `packages/core/src/version.ts` (and the ranges in `examples/basic/package.json`), and add the entry to `CHANGELOG.md`. Merge this to `master`.
-2. Push a tag `v<version>` on that commit (`git tag v0.1.0 && git push origin v0.1.0`).
-3. `.github/workflows/release.yml` checks the tag against the versions, builds, tests, packs (`workspace:^` becomes the real range) and publishes `@mirage-x/core`, `@mirage-x/server`, then `@mirage-x/mirror`, with npm provenance. It authenticates with npm trusted publishing (OIDC), so no token is stored: on npmjs.com, each package has GitHub Actions `rheniumNV` / `mirage-x` / `release.yml` as its trusted publisher. A version that is already on npm is skipped.
+1. On `develop`, set `version` in `packages/core/package.json`, `packages/server/package.json`, `packages/mirror/package.json` and `packages/core/src/version.ts` (and the ranges in `examples/basic/package.json`), and add the entry to `CHANGELOG.md`. Then open a pull request from `develop` to `master` and merge it with a merge commit (not squash or rebase, so `develop` stays in step with `master`).
+2. If the packages do not have their trusted publishers on npmjs.com yet (see below), add them now. Then push a tag `v<version>` (e.g. `v0.1.1`) on the merge commit on `master`:
+
+   ```bash
+   git switch master
+   git pull
+   git tag v<version>
+   git push origin v<version>
+   ```
+
+3. `.github/workflows/release.yml` checks that the tagged commit is on `master` and the tag matches the versions, builds, tests, packs (`workspace:^` becomes the real range) and publishes `@mirage-x/core`, `@mirage-x/server`, then `@mirage-x/mirror`, with npm provenance. It authenticates with npm trusted publishing (OIDC), so no token is stored: on npmjs.com, each package has GitHub Actions `rheniumNV` / `mirage-x` / `release.yml` as its trusted publisher. A version that is already on npm is skipped.
 
 A trusted publisher can only be added to a package that already exists, and a new one expires unless it publishes within 2 days. So 0.1.0 was published by hand, and the trusted publishers are added right before the next release.
 

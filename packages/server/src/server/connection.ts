@@ -122,15 +122,17 @@ export class Connection {
               authUrl: this.authUrl,
               platformApiUrl: init.platformApiUrl,
               defaultAuthenticationToken: init.defaultAuthenticationToken,
+              // Passed in, not assigned afterwards: the app's first render and
+              // its sync events happen inside the constructor.
+              syncEventCallback: (event) => {
+                if (init.eventCountSolver) {
+                  this.events.push(event);
+                } else {
+                  this.ws.send(json2emap({ type: "sync", data: event }));
+                }
+                addEventCount();
+              },
             });
-            this.logicManager.syncEventCallback = (event) => {
-              if (init.eventCountSolver) {
-                this.events.push(event);
-              } else {
-                this.ws.send(json2emap({ type: "sync", data: event }));
-              }
-              addEventCount();
-            };
             break;
           }
           default:
@@ -142,6 +144,7 @@ export class Connection {
     });
 
     const clean = () => {
+      clearTimeout(initTimeout);
       this.logicManager?.close();
       this.logicManager = undefined;
       init.onClose(this);
@@ -154,7 +157,7 @@ export class Connection {
 
     this.ws.on("close", clean);
 
-    setTimeout(() => {
+    const initTimeout = setTimeout(() => {
       if (!this.logicManager) {
         console.warn("initialize timeout");
         clean();

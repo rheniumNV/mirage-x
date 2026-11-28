@@ -7,7 +7,7 @@
 - `MirageXServer`: サーバーで React アプリを描画し、その変更を Resonite のミラーに送ります（express + WebSocket）
 - `generateMain`: Unit を React のコンポーネントにします
 - フック: `useMirrorRef`、`useBoundCallback`、`useMainRootContext`
-- `Logger`
+- `Logger` と、コンポーネントからログを出すための `useLogger` / `LogContext`。`useLogger()` は、`MirageXServer` に渡した logger の子（コンテキスト名 `render`）を返します。`LogContext` は、子に独自のコンテキスト名を持つさらに子の logger を渡します
 
 `react` 19（19.3 以降）は peerDependency です。コンポーネントとランタイムが同じ React を使う必要があるためです。
 
