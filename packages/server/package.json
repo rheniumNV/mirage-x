@@ -37,7 +37,7 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
-    "test": "tsx --tsconfig tsconfig.test.json --test \"test/**/*.test.{ts,tsx}\""
+    "test": "tsx --tsconfig tsconfig.test.json --test --test-timeout=30000 \"test/**/*.test.{ts,tsx}\""
   },
   "peerDependencies": {
     "react": "^19.3.0"

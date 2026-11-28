@@ -1,8 +1,8 @@
 import { createContext, type ReactElement } from "react";
 import Reconciler from "react-reconciler";
 import {
-  DefaultEventPriority,
-  LegacyRoot,
+  DiscreteEventPriority,
+  ConcurrentRoot,
   NoEventPriority,
 } from "react-reconciler/constants.js";
 
@@ -10,6 +10,33 @@ import {
  * A renderer with no host output. Units report their changes from effects
  * (see `generateMain`), so React only has to run the components; every host
  * hook here is a no-op.
+ *
+ * MirageX renders synchronously: when `render()` or `flushSync()` returns,
+ * the tree has been rendered and its effects have run (so the sync events have
+ * been emitted and the props setter is registered). React 18's legacy root
+ * rendered synchronously but ran effects later; React 19 has no legacy mode
+ * (react-reconciler 0.31+ treats every root as concurrent and schedules
+ * renders), so:
+ * - `render()` uses `updateContainerSync` + `flushSyncWork`;
+ * - every update that is not a transition gets the discrete (sync) priority,
+ *   including updates made in effects (rendered at the end of the current
+ *   work). Outside React's own work, React renders them in a microtask
+ *   (`scheduleMicrotask`) and runs their effects right after the commit;
+ * - `flushSync(fn)` renders the updates made in `fn` before it returns, unless
+ *   it is called while React is rendering or committing (then they are
+ *   rendered at the end of that work).
+ *
+ * Transitions (`startTransition`, `useDeferredValue`) and Suspense retries
+ * are still scheduled (`scheduleTimeout` is Node's `setTimeout`, so a
+ * Suspense boundary shows its content once the data is ready, after React's
+ * throttle of up to 300 ms after the fallback).
+ *
+ * `render()` uses `updateContainerSync` so that the first render does not
+ * depend on `resolveUpdatePriority` below.
+ *
+ * Since updates in effects are sync, an effect that keeps setting state stops
+ * with React's "Maximum update depth exceeded" error after about 50 renders
+ * (the app unmounts) instead of looping.
  */
 
 const emptyObject = {};
@@ -36,6 +63,8 @@ const TinyDOMRenderer = Reconciler({
     ),
 
   supportsMutation: false,
+  supportsMicrotasks: true,
+  scheduleMicrotask: queueMicrotask,
   supportsHydration: false,
   supportsPersistence: false,
   isPrimaryRenderer: true,
@@ -59,8 +88,8 @@ const TinyDOMRenderer = Reconciler({
   clearContainer: () => {},
   detachDeletedInstance: () => {},
 
-  scheduleTimeout: () => {},
-  cancelTimeout: () => {},
+  scheduleTimeout: setTimeout,
+  cancelTimeout: clearTimeout,
   noTimeout: -1,
 
   getInstanceFromNode: () => null,
@@ -74,10 +103,10 @@ const TinyDOMRenderer = Reconciler({
     currentUpdatePriority = priority;
   },
   getCurrentUpdatePriority: () => currentUpdatePriority,
-  resolveUpdatePriority: () =>
-    currentUpdatePriority !== NoEventPriority
-      ? currentUpdatePriority
-      : DefaultEventPriority,
+  // Every update is a discrete (sync) update, even inside effects (which React
+  // runs at the default priority); see the comment at the top. Transitions
+  // get their lanes elsewhere; this does not decide them.
+  resolveUpdatePriority: () => DiscreteEventPriority,
   resolveEventType: () => null,
   resolveEventTimeStamp: () => -1.1,
   trackSchedulerEvent: () => {},
@@ -108,7 +137,9 @@ export const DummyReactRenderer = {
     };
     const newRoot = TinyDOMRenderer.createContainer(
       dummyInstance,
-      LegacyRoot,
+      // Since react-reconciler 0.31 every root is concurrent; the tag is not a
+      // legacy (sync) mode any more.
+      ConcurrentRoot,
       null,
       // Not strict: React 19 would mount every effect twice in development,
       // and units emit their sync events from effects.
@@ -121,7 +152,13 @@ export const DummyReactRenderer = {
       () => {},
       null,
     );
-    TinyDOMRenderer.updateContainer(element, newRoot, null);
+    TinyDOMRenderer.updateContainerSync(element, newRoot, null, null);
+    TinyDOMRenderer.flushSyncWork();
     return newRoot;
+  },
+
+  /** Run `fn` and render the updates it made before returning. */
+  flushSync<R>(fn: () => R): R {
+    return TinyDOMRenderer.flushSyncFromReconciler(fn);
   },
 };

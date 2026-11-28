@@ -75,8 +75,14 @@ export class LogicManager {
       authUrl: string;
       platformApiUrl: string;
       defaultAuthenticationToken?: string;
+      /**
+       * Where the sync events go. Set before the app is rendered: the first
+       * render (and its effects) runs inside this constructor.
+       */
+      syncEventCallback?: (event: UnitChangeClientEvent) => unknown;
     },
   ) {
+    this.syncEventCallback = init.syncEventCallback;
     this.ownerId = init.ownerId;
     this.lang = init.lang;
     this.authUrl = init.authUrl;
@@ -133,9 +139,14 @@ export class LogicManager {
           generated: false,
         });
         break;
-      case "destroyUnit":
+      case "destroyUnit": {
+        const generated = this.unitMap.get(event.unit.id)?.generated;
         this.unitMap.delete(event.unit.id);
+        // The client never had it (it was removed while it waited for its
+        // parent), so there is nothing to destroy.
+        if (!generated) return;
         break;
+      }
       case "updateProp":
         // Sent once the unit itself has been generated (see isValidUnit).
         break;
@@ -150,17 +161,25 @@ export class LogicManager {
       this.syncEventCallback?.(event);
       if (event.type === "generateUnit") {
         const unit = this.unitMap.get(event.unit.id);
-        if (unit) {
-          this.unitMap.set(event.unit.id, { ...unit, generated: true });
-        }
+        // In place: a waiting event checks it still has the same entry.
+        if (unit) unit.generated = true;
       }
     };
 
     if (event.type === "destroyUnit" || isValidUnit(event, this.unitMap)) {
       sendEvent();
     } else {
+      const entry = this.unitMap.get(event.unit.id);
+      // Nothing to wait for (e.g. an update for a unit that does not exist).
+      if (!entry) return;
       const wait4Send = () => {
         setTimeout(() => {
+          // Stop once nothing can send it: the manager is closed, or the unit
+          // was removed before it could be generated. A unit shown again with
+          // the same id (`<Activity>`) has a new entry; what waited for the
+          // old one is dropped, so it cannot arrive after newer events.
+          if (this.closed) return;
+          if (this.unitMap.get(event.unit.id) !== entry) return;
           if (isValidUnit(event, this.unitMap)) {
             sendEvent();
           } else {
@@ -184,11 +203,17 @@ export class LogicManager {
     console.info("close logic", this.ownerId);
   }
 
-
+  /**
+   * Rendered before returning (when called outside React's own work), so that
+   * `close()` has unmounted the units, and run their cleanups, before it
+   * clears the maps.
+   */
   syncProps() {
-    this.propsSetter({
-      authentication: this.authentication,
-      closed: this.closed,
+    DummyReactRenderer.flushSync(() => {
+      this.propsSetter({
+        authentication: this.authentication,
+        closed: this.closed,
+      });
     });
   }
 
