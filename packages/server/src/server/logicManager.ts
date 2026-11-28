@@ -170,12 +170,20 @@ export class LogicManager {
       sendEvent();
     } else {
       const entry = this.unitMap.get(event.unit.id);
+      // Nothing to wait for (e.g. an update for a unit that does not exist).
+      if (!entry) return;
       const wait4Send = () => {
         setTimeout(() => {
           // Stop once nothing can send it: the manager is closed, or the unit
           // was removed before it could be generated. A unit shown again with
-          // the same id (`<Activity>`) has a new entry and its own events.
-          if (this.closed || this.unitMap.get(event.unit.id) !== entry) return;
+          // the same id (`<Activity>`) has a new entry and sends its own
+          // generateUnit; a waiting prop update is still sent, after it.
+          if (this.closed) return;
+          const removed =
+            event.type === "generateUnit"
+              ? this.unitMap.get(event.unit.id) !== entry
+              : !this.unitMap.has(event.unit.id);
+          if (removed) return;
           if (isValidUnit(event, this.unitMap)) {
             sendEvent();
           } else {

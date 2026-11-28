@@ -203,13 +203,37 @@ describe("Connection", () => {
     };
     return withConnection(
       () => open(Toggling),
-      async ({ synced }) => {
+      async ({ ws, synced }) => {
         DummyReactRenderer.flushSync(() => setMode("hidden"));
         DummyReactRenderer.flushSync(() => setMode("visible"));
         await new Promise((resolve) => setTimeout(resolve, 20));
         const leaves = synced().filter((s) => s === "generateUnit Test/Leaf");
         assert.equal(leaves.length, 1);
+        // The label, set before the leaf was hidden, still follows it.
+        const leaf = synced().indexOf("generateUnit Test/Leaf");
+        const label = ws.sent
+          .slice(2)
+          .findIndex((m) => m.includes("updateProp") && m.includes("hello"));
+        assert.ok(label > leaf, "the label was not sent after the leaf");
       },
     );
   });
+
+  it("does not wait for a unit that does not exist", () =>
+    withConnection(
+      () => open(App),
+      async ({ connection }) => {
+        const manager = connection.logicManager;
+        assert.ok(manager);
+        // Let the app's own waiting events finish first.
+        await until(() => [...manager.unitMap.values()].every((u) => u.generated));
+        const lookups = countLookups(manager.unitMap);
+        manager.emitEvent({
+          type: "updateProp",
+          unit: { id: "missing", prop: { key: "label", type: "string", value: "y" } },
+        } as Parameters<typeof manager.emitEvent>[0]);
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        assert.ok(lookups() <= 2, `still waiting (${lookups()} lookups)`);
+      },
+    ));
 });
