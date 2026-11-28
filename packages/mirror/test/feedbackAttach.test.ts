@@ -14,7 +14,10 @@ import {
 } from "../src/feedback/attachCoreAndFrames.js";
 import { attachUnits } from "../src/feedback/attachUnits.js";
 import { readFeedback } from "../src/feedback/feedbackFile.js";
-import { sanitizeFeedback } from "../src/feedback/sanitize.js";
+import {
+  isDevelopmentValue,
+  sanitizeFeedback,
+} from "../src/feedback/sanitize.js";
 import { STAGED_FEEDBACK, STAGED_META } from "../src/feedback/staging.js";
 import {
   allSlots,
@@ -249,6 +252,64 @@ describe("sanitizeFeedback", () => {
     assert.deepEqual(ws.componentValue(client, "IsConnected"), bool(false));
     // Other values are left alone.
     assert.deepEqual(variableValues(doc, "Env.Version.Current"), ["1", "1"]);
+  });
+
+  it("keeps a production host, such as another app's embedded in a frame", () => {
+    const doc = savedClient();
+    // Only the string variables (other components share the name).
+    const setHost = (name: string) =>
+      setVariableValues(doc, name, str("app.example.com"), (slot) =>
+        slot.components().some(
+          ({ typeName }, i) =>
+            typeName.endsWith("DynamicValueVariable<string>") &&
+            stringOf(slot.tryComponentValue(i, "VariableName")) === name,
+        ),
+      );
+    setHost("Static.Web.Host");
+    setHost("Env.Host.Fallback");
+    sanitizeFeedback(doc);
+    for (const name of ["Static.Web.Host", "Env.Host.Fallback"]) {
+      const values = variableValues(doc, name).filter((v) => v !== null);
+      assert.ok(values.length > 0, name);
+      assert.deepEqual([...new Set(values)], ["app.example.com"], name);
+    }
+  });
+
+  it("tells development values from production ones", () => {
+    const development = [
+      "localhost:3100",
+      "LOCALHOST",
+      "app.localhost:3000",
+      "mypc.local:3100",
+      "127.0.0.1:3100",
+      "10.0.0.5",
+      "172.16.1.2:80",
+      "172.31.255.255",
+      "192.168.1.20:3100",
+      "169.254.1.1",
+      "0.0.0.0:3100",
+      "[::1]:3100",
+      "http://app.example.com/",
+      "ws://app.example.com/ws",
+      "wss://localhost:3100/ws",
+      "https://user@192.168.0.3:8443/",
+    ];
+    const production = [
+      "app.example.com",
+      "app.example.com:443",
+      "wss://app.example.com/ws",
+      "https://app.example.com/",
+      "172.32.0.1",
+      "11.0.0.1",
+      "192.169.0.1",
+      "localhost.example.com",
+    ];
+    for (const value of development) {
+      assert.equal(isDevelopmentValue(value), true, value);
+    }
+    for (const value of production) {
+      assert.equal(isDevelopmentValue(value), false, value);
+    }
   });
 });
 
