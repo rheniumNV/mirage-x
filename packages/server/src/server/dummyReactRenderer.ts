@@ -2,7 +2,7 @@ import { createContext, type ReactElement } from "react";
 import Reconciler from "react-reconciler";
 import {
   DiscreteEventPriority,
-  LegacyRoot,
+  ConcurrentRoot,
   NoEventPriority,
 } from "react-reconciler/constants.js";
 
@@ -11,15 +11,22 @@ import {
  * (see `generateMain`), so React only has to run the components; every host
  * hook here is a no-op.
  *
- * MirageX needs rendering to be synchronous, as with React 18's legacy root:
- * when `render()` or `flushSync()` returns, the tree has been rendered and its
- * effects have run (so the sync events have been emitted and the props
- * setter is registered). React 19 has no legacy mode (react-reconciler 0.31+
- * treats every root as concurrent and schedules renders), so:
+ * MirageX renders synchronously: when `render()` or `flushSync()` returns,
+ * the tree has been rendered and its effects have run (so the sync events have
+ * been emitted and the props setter is registered). React 18's legacy root
+ * rendered synchronously but ran effects later; React 19 has no legacy mode
+ * (react-reconciler 0.31+ treats every root as concurrent and schedules
+ * renders), so:
  * - `render()` uses `updateContainerSync` + `flushSyncWork`;
- * - every update gets the discrete (sync) priority, which React renders in a
- *   microtask and whose passive effects it flushes right after the commit;
- * - `flushSync(fn)` renders the updates made in `fn` before it returns.
+ * - every update that is not a transition gets the discrete (sync) priority,
+ *   including updates made in effects. React renders those in a microtask
+ *   (`scheduleMicrotask`) and runs their effects right after the commit;
+ * - `flushSync(fn)` renders the updates made in `fn` before it returns, unless
+ *   it is called while React is rendering or committing (then they are
+ *   rendered at the end of that work).
+ *
+ * Transitions (`startTransition`, `useDeferredValue`) and Suspense retries
+ * are still scheduled.
  */
 
 const emptyObject = {};
@@ -47,7 +54,7 @@ const TinyDOMRenderer = Reconciler({
 
   supportsMutation: false,
   supportsMicrotasks: true,
-  scheduleMicrotask: (fn: () => unknown) => queueMicrotask(fn as () => void),
+  scheduleMicrotask: queueMicrotask,
   supportsHydration: false,
   supportsPersistence: false,
   isPrimaryRenderer: true,
@@ -86,11 +93,10 @@ const TinyDOMRenderer = Reconciler({
     currentUpdatePriority = priority;
   },
   getCurrentUpdatePriority: () => currentUpdatePriority,
-  // Every update is a discrete (sync) update; see the comment at the top.
-  resolveUpdatePriority: () =>
-    currentUpdatePriority !== NoEventPriority
-      ? currentUpdatePriority
-      : DiscreteEventPriority,
+  // Every update is a discrete (sync) update, even inside effects (which React
+  // runs at the default priority); see the comment at the top. Transitions
+  // take their own lanes and do not ask for this.
+  resolveUpdatePriority: () => DiscreteEventPriority,
   resolveEventType: () => null,
   resolveEventTimeStamp: () => -1.1,
   trackSchedulerEvent: () => {},
@@ -121,7 +127,8 @@ export const DummyReactRenderer = {
     };
     const newRoot = TinyDOMRenderer.createContainer(
       dummyInstance,
-      LegacyRoot,
+      // Ignored since react-reconciler 0.31: every root is concurrent.
+      ConcurrentRoot,
       null,
       // Not strict: React 19 would mount every effect twice in development,
       // and units emit their sync events from effects.

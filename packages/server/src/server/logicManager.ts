@@ -75,8 +75,14 @@ export class LogicManager {
       authUrl: string;
       platformApiUrl: string;
       defaultAuthenticationToken?: string;
+      /**
+       * Where the sync events go. Set before the app is rendered: the first
+       * render (and its effects) runs inside this constructor.
+       */
+      syncEventCallback?: (event: UnitChangeClientEvent) => unknown;
     },
   ) {
+    this.syncEventCallback = init.syncEventCallback;
     this.ownerId = init.ownerId;
     this.lang = init.lang;
     this.authUrl = init.authUrl;
@@ -161,6 +167,8 @@ export class LogicManager {
     } else {
       const wait4Send = () => {
         setTimeout(() => {
+          // A closed manager never generates the parent: stop retrying.
+          if (this.closed) return;
           if (isValidUnit(event, this.unitMap)) {
             sendEvent();
           } else {
@@ -184,9 +192,9 @@ export class LogicManager {
     console.info("close logic", this.ownerId);
   }
 
-
-  // Rendered before returning, so that `close()` has unmounted the units (and
-  // run their cleanups) before the maps below are cleared.
+  // Rendered before returning (when called outside React's own work), so that
+  // `close()` has unmounted the units, and run their cleanups, before it
+  // clears the maps.
   syncProps() {
     DummyReactRenderer.flushSync(() => {
       this.propsSetter({

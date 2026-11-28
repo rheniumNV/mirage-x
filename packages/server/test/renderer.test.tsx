@@ -48,7 +48,7 @@ describe("DummyReactRenderer is synchronous", () => {
     ]);
   });
 
-  it("an update outside flushSync() is rendered before the next task", async () => {
+  it("an update outside flushSync() is rendered in a microtask", async () => {
     const log: string[] = [];
     let set: (n: number) => void = () => {};
     const Probe = () => {
@@ -61,14 +61,32 @@ describe("DummyReactRenderer is synchronous", () => {
     };
     DummyReactRenderer.render(<Probe />);
     set(1);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.deepEqual(log, ["effect 0", "effect 1"]);
+    log.push("after setState");
+    // React queued its microtask in set(1), before this one.
+    await Promise.resolve();
+    assert.deepEqual(log, ["effect 0", "after setState", "effect 1"]);
+  });
+
+  it("an update made in an effect is rendered before render() returns", () => {
+    const log: string[] = [];
+    const Probe = () => {
+      const [n, setN] = useState(0);
+      log.push(`render ${n}`);
+      useEffect(() => {
+        if (n === 0) setN(1);
+      }, [n]);
+      return null;
+    };
+    DummyReactRenderer.render(<Probe />);
+    log.push("after render()");
+    assert.deepEqual(log, ["render 0", "render 1", "after render()"]);
   });
 });
 
 describe("LogicManager", () => {
+  const logger = new Logger({ contextName: "test", logLevel: "error" });
   const create = (app: () => ReactElement) =>
-    new LogicManager(app, new Logger({ contextName: "test", logLevel: "error" }), {
+    new LogicManager(app, logger, {
       connectionId: "connection",
       ownerId: "U-test",
       lang: "ja",

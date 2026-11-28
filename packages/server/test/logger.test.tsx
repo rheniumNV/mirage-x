@@ -62,7 +62,7 @@ describe("useLogger / LogContext", () => {
     console.error = (error: unknown) => errors.push(error);
     try {
       DummyReactRenderer.render(<Probe />);
-      } finally {
+    } finally {
       console.error = original;
     }
     assert.ok(
