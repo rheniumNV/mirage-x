@@ -121,15 +121,17 @@ export const generateClient = ({
     ),
   ];
   // `output` still has the frame's version and flags here.
-  const { versionNumber, featureFlags, warnings } = partVersions(
+  const { versionNumber, featureFlags, warnings, details } = partVersions(
     [{ label: "frame", doc: output }, ...imported],
     versionSource,
   );
-  for (const warning of [
-    ...warnings,
-    ...typeVersionWarnings(output, imported),
-  ]) {
+  const typeVersions = typeVersionWarnings(output, imported);
+  // Each warning names a few parts; the debug output names all of them.
+  for (const warning of [...warnings, ...typeVersions.warnings]) {
     console.warn(warning);
+  }
+  for (const detail of [...details, ...typeVersions.details]) {
+    console.debug(detail);
   }
   output.setVersionNumber(versionNumber);
   output.setFeatureFlags(featureFlags);

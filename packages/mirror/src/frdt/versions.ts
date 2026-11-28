@@ -29,9 +29,46 @@ export type PartVersions = {
    * `"frame"`: the first part's.
    */
   featureFlags: FeatureFlag[];
-  /** Messages about parts that are far apart and flags left out or differing. */
+  /**
+   * Messages about parts that are far apart and flags left out or differing.
+   * Each names at most a few parts (see `Warnings`).
+   */
   warnings: string[];
+  /** The same messages with every part named, for debug output. */
+  details: string[];
 };
+
+/** How many parts a warning names before it says how many more there are. */
+export const WARNING_PART_LIMIT = 3;
+
+/**
+ * Warnings that name a list of parts: `warnings` names at most
+ * `WARNING_PART_LIMIT` of them (`205 parts: a, b, c, … and 202 more`),
+ * `details` all of them.
+ */
+export class Warnings {
+  readonly warnings: string[] = [];
+  readonly details: string[] = [];
+
+  add(message: string, parts: string[]) {
+    const all = parts.join(", ");
+    this.details.push(`${message}: ${all}`);
+    if (parts.length <= WARNING_PART_LIMIT) {
+      this.warnings.push(`${message}: ${all}`);
+      return;
+    }
+    const shown = parts.slice(0, WARNING_PART_LIMIT).join(", ");
+    const more = parts.length - WARNING_PART_LIMIT;
+    this.warnings.push(
+      `${message}: ${parts.length} parts: ${shown}, … and ${more} more`,
+    );
+  }
+
+  addAll(other: Warnings) {
+    this.warnings.push(...other.warnings);
+    this.details.push(...other.details);
+  }
+}
 
 /** Parts further apart than this are reported. */
 export const VERSION_SPAN_WARNING_DAYS = 90;
@@ -65,7 +102,7 @@ export const partVersions = (
   const oldest = sorted[0]!;
   const newest = sorted[sorted.length - 1]!;
 
-  const warnings: string[] = [];
+  const warnings = new Warnings();
   const oldestDay = dayOf(oldest.versionNumber);
   const newestDay = dayOf(newest.versionNumber);
   if (
@@ -77,17 +114,21 @@ export const partVersions = (
       source === "frame"
         ? `the ${first.label}'s (${first.doc.versionNumber()})`
         : `the oldest (${oldest.versionNumber})`;
-    warnings.push(
-      `Parts were saved by Resonite versions more than ${VERSION_SPAN_WARNING_DAYS} days apart; the output uses ${uses}: ` +
-        sorted.map((v) => `${v.label} ${v.versionNumber}`).join(", "),
+    warnings.add(
+      `Parts were saved by Resonite versions more than ` +
+        `${VERSION_SPAN_WARNING_DAYS} days apart (${oldest.versionNumber} to ` +
+        `${newest.versionNumber}); the output uses ${uses}; oldest first`,
+      sorted.map((v) => `${v.label} ${v.versionNumber}`),
     );
   }
 
   if (source === "frame") {
+    warnings.addAll(frameFlagWarnings(parts));
     return {
       versionNumber: first.doc.versionNumber(),
       featureFlags: first.doc.featureFlags(),
-      warnings: [...warnings, ...frameFlagWarnings(parts)],
+      warnings: warnings.warnings,
+      details: warnings.details,
     };
   }
 
@@ -103,9 +144,9 @@ export const partVersions = (
       const value = Math.min(...(values as number[]));
       featureFlags.push({ name, value });
       if (values.some((v) => v !== value)) {
-        warnings.push(
-          `FeatureFlag ${name} differs between parts; the output uses ${value}: ` +
-            flagsOf.map(({ label, flags }) => `${label} ${flags.get(name)}`).join(", "),
+        warnings.add(
+          `FeatureFlag ${name} differs between parts; the output uses ${value}`,
+          flagsOf.map(({ label, flags }) => `${label} ${flags.get(name)}`),
         );
       }
     }
@@ -115,20 +156,27 @@ export const partVersions = (
     const lacking = flagsOf
       .filter(({ flags }) => !flags.has(name))
       .map(({ label }) => label);
-    warnings.push(
-      `FeatureFlag ${name} is left out because some parts do not have it: ${lacking.join(", ")}`,
+    warnings.add(
+      `FeatureFlag ${name} is left out because some parts do not have it`,
+      lacking,
     );
   }
-  return { versionNumber: oldest.versionNumber, featureFlags, warnings };
+  return {
+    versionNumber: oldest.versionNumber,
+    featureFlags,
+    warnings: warnings.warnings,
+    details: warnings.details,
+  };
 };
 
 /**
  * With `"frame"`: flags that other parts lack or have with another value,
  * and flags other parts have but the frame does not.
  */
-const frameFlagWarnings = (parts: Part[]): string[] => {
+const frameFlagWarnings = (parts: Part[]): Warnings => {
+  const warnings = new Warnings();
   const [frame, ...rest] = parts;
-  if (!frame) return [];
+  if (!frame) return warnings;
   const frameFlags = new Map(
     frame.doc.featureFlags().map((f) => [f.name, f.value]),
   );
@@ -136,7 +184,6 @@ const frameFlagWarnings = (parts: Part[]): string[] => {
     label,
     flags: new Map(doc.featureFlags().map((f) => [f.name, f.value])),
   }));
-  const warnings: string[] = [];
   for (const [name, value] of frameFlags) {
     const missing = restFlags
       .filter(({ flags }) => !flags.has(name))
@@ -145,13 +192,16 @@ const frameFlagWarnings = (parts: Part[]): string[] => {
       .filter(({ flags }) => flags.has(name) && flags.get(name) !== value)
       .map(({ label, flags }) => `${label} ${flags.get(name)}`);
     if (missing.length > 0) {
-      warnings.push(
-        `FeatureFlag ${name} is kept from the ${frame.label} but is missing in: ${missing.join(", ")}`,
+      warnings.add(
+        `FeatureFlag ${name} is kept from the ${frame.label} but is missing in`,
+        missing,
       );
     }
     if (differing.length > 0) {
-      warnings.push(
-        `FeatureFlag ${name} is the ${frame.label}'s (${value}) in the output but differs in: ${differing.join(", ")}`,
+      warnings.add(
+        `FeatureFlag ${name} is the ${frame.label}'s (${value}) in the output ` +
+          "but differs in",
+        differing,
       );
     }
   }
@@ -161,8 +211,10 @@ const frameFlagWarnings = (parts: Part[]): string[] => {
     const having = restFlags
       .filter(({ flags }) => flags.has(name))
       .map(({ label }) => label);
-    warnings.push(
-      `FeatureFlag ${name} is left out because the ${frame.label} does not have it: ${having.join(", ")}`,
+    warnings.add(
+      `FeatureFlag ${name} is left out because the ${frame.label} does not ` +
+        "have it",
+      having,
     );
   }
   return warnings;
@@ -174,11 +226,14 @@ const frameFlagWarnings = (parts: Part[]): string[] => {
  * Resonite treats those components as saved by the output's type version.
  * A type without an entry is at version 0.
  */
-export const typeVersionWarnings = (output: Document, parts: Part[]): string[] => {
+export const typeVersionWarnings = (
+  output: Document,
+  parts: Part[],
+): Warnings => {
   const written = new Map(
     output.types().map((t) => [t, output.typeVersion(t) ?? 0]),
   );
-  const warnings: string[] = [];
+  const warnings = new Warnings();
   for (const [type, version] of [...written].sort(([a], [b]) => a.localeCompare(b))) {
     const differing = parts.flatMap(({ label, doc }) => {
       if (!doc.types().includes(type)) return [];
@@ -186,8 +241,9 @@ export const typeVersionWarnings = (output: Document, parts: Part[]): string[] =
       return own === version ? [] : [`${label} ${own}`];
     });
     if (differing.length > 0) {
-      warnings.push(
-        `TypeVersion of ${type} is ${version} in the output but differs in: ${differing.join(", ")}`,
+      warnings.add(
+        `TypeVersion of ${type} is ${version} in the output but differs in`,
+        differing,
       );
     }
   }
