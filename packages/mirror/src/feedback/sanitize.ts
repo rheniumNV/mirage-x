@@ -62,7 +62,7 @@ const isLocalIpv4 = ([a, b]: number[]): boolean =>
   (a === 192 && b === 168) || // private
   (a === 100 && b! >= 64 && b! <= 127) || // shared (CGNAT, Tailscale)
   (a === 169 && b === 254) || // link-local
-  (a === 0 && b === 0);
+  a === 0; // this network (0.0.0.0)
 
 const isLocalIpv6 = (host: string): boolean => {
   const mapped = host.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
@@ -97,6 +97,21 @@ const isLocalHost = (host: string): boolean => {
 /** A value saved from a local session: a debug URL or a local host. */
 export const isDevelopmentValue = (value: string) =>
   isDebugUrl(value) || isLocalHost(hostOf(value));
+
+/**
+ * A value that is a host or a URL (a scheme, a port, a dot, `localhost` or an
+ * IP), not just any text. A cloud variable's fallback can be any string.
+ */
+const looksLikeHost = (value: string) => {
+  const trimmed = value.trim().replace(/^@/, "");
+  return (
+    /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ||
+    /^[^\s/]+:\d+(\/|$)/.test(trimmed) ||
+    /^\[[0-9a-f:.%]+\]/i.test(trimmed) ||
+    (/^[^\s/]+\.[^\s/]+/.test(trimmed) && !/\s/.test(trimmed)) ||
+    hostOf(trimmed) === "localhost"
+  );
+};
 
 /**
  * Read a field, `undefined` when the component has no such field or its value
@@ -143,7 +158,11 @@ export const sanitizeFeedback = (doc: Document): number => {
       }
       if (typeName.startsWith(`${FRAMEWORK}CloudValueVariableDriver<`)) {
         const fallback = stringOf(read(slot, i, "FallbackValue"));
-        if (fallback && isDevelopmentValue(fallback)) {
+        if (
+          fallback &&
+          looksLikeHost(fallback) &&
+          isDevelopmentValue(fallback)
+        ) {
           clear(slot, i, "FallbackValue", str(""));
         }
         return;

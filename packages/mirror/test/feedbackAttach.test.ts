@@ -301,6 +301,38 @@ describe("sanitizeFeedback", () => {
     ]);
   });
 
+  it("clears a cloud variable's local fallback, keeps one that is not a host", () => {
+    const fallbacksAfterSanitize = (value: string) => {
+      const doc = savedClient();
+      const drivers = allSlots(doc.root()).flatMap((slot) =>
+        slot
+          .components()
+          .map(({ typeName }, i) => ({ slot, i, typeName }))
+          .filter(({ typeName }) =>
+            typeName.startsWith("[FrooxEngine]FrooxEngine.CloudValueVariableDriver<"),
+          ),
+      );
+      assert.ok(drivers.length > 0);
+      for (const { slot, i } of drivers) {
+        slot.setComponentValue(i, "FallbackValue", str(value));
+      }
+      sanitizeFeedback(doc);
+      return [
+        ...new Set(
+          drivers.map(({ slot, i }) =>
+            stringOf(slot.componentValue(i, "FallbackValue")),
+          ),
+        ),
+      ];
+    };
+    assert.deepEqual(fallbacksAfterSanitize("localhost:3100"), [""]);
+    assert.deepEqual(fallbacksAfterSanitize("192.168.1.2"), [""]);
+    assert.deepEqual(fallbacksAfterSanitize("app.example.com"), ["app.example.com"]);
+    for (const text of ["Guest", "My App", "true", "42", "mypc"]) {
+      assert.deepEqual(fallbacksAfterSanitize(text), [text], text);
+    }
+  });
+
   it("tells development values from production ones", () => {
     const development = [
       "localhost:3100",
