@@ -26,7 +26,12 @@ import {
  *   rendered at the end of that work).
  *
  * Transitions (`startTransition`, `useDeferredValue`) and Suspense retries
- * are still scheduled.
+ * are still scheduled (`scheduleTimeout` is the real `setTimeout`, so a
+ * Suspense boundary shows its content once the data is ready).
+ *
+ * Since updates in effects are sync, an effect that keeps setting state stops
+ * with React's "Maximum update depth exceeded" error after about 50 renders
+ * (the app unmounts) instead of looping.
  */
 
 const emptyObject = {};
@@ -78,8 +83,8 @@ const TinyDOMRenderer = Reconciler({
   clearContainer: () => {},
   detachDeletedInstance: () => {},
 
-  scheduleTimeout: () => {},
-  cancelTimeout: () => {},
+  scheduleTimeout: setTimeout,
+  cancelTimeout: clearTimeout,
   noTimeout: -1,
 
   getInstanceFromNode: () => null,
@@ -95,7 +100,7 @@ const TinyDOMRenderer = Reconciler({
   getCurrentUpdatePriority: () => currentUpdatePriority,
   // Every update is a discrete (sync) update, even inside effects (which React
   // runs at the default priority); see the comment at the top. Transitions
-  // take their own lanes and do not ask for this.
+  // get their lanes elsewhere; this does not decide them.
   resolveUpdatePriority: () => DiscreteEventPriority,
   resolveEventType: () => null,
   resolveEventTimeStamp: () => -1.1,

@@ -281,7 +281,8 @@ export class MirageXServer {
     try {
       const invoke = () => {
         try {
-          // The state updates the handler makes are rendered before this returns.
+          // Updates the handler makes synchronously are rendered before this
+          // returns (those after an `await` are rendered in a microtask).
           const result = DummyReactRenderer.flushSync(() =>
             func({ userId, lang }, ...(args as unknown[])),
           );

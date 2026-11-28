@@ -139,9 +139,14 @@ export class LogicManager {
           generated: false,
         });
         break;
-      case "destroyUnit":
+      case "destroyUnit": {
+        const generated = this.unitMap.get(event.unit.id)?.generated;
         this.unitMap.delete(event.unit.id);
+        // The client never had it (it was removed while it waited for its
+        // parent), so there is nothing to destroy.
+        if (!generated) return;
         break;
+      }
       case "updateProp":
         // Sent once the unit itself has been generated (see isValidUnit).
         break;
@@ -167,8 +172,9 @@ export class LogicManager {
     } else {
       const wait4Send = () => {
         setTimeout(() => {
-          // A closed manager never generates the parent: stop retrying.
-          if (this.closed) return;
+          // Stop once nothing can send it: the manager is closed, or the unit
+          // was removed before it could be generated.
+          if (this.closed || !this.unitMap.has(event.unit.id)) return;
           if (isValidUnit(event, this.unitMap)) {
             sendEvent();
           } else {
@@ -192,9 +198,11 @@ export class LogicManager {
     console.info("close logic", this.ownerId);
   }
 
-  // Rendered before returning (when called outside React's own work), so that
-  // `close()` has unmounted the units, and run their cleanups, before it
-  // clears the maps.
+  /**
+   * Rendered before returning (when called outside React's own work), so that
+   * `close()` has unmounted the units, and run their cleanups, before it
+   * clears the maps.
+   */
   syncProps() {
     DummyReactRenderer.flushSync(() => {
       this.propsSetter({

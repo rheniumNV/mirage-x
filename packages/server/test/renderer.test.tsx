@@ -1,14 +1,20 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { useEffect, useState, type ReactElement } from "react";
+import {
+  Suspense,
+  use,
+  useEffect,
+  useState,
+  type ReactElement,
+} from "react";
 
 import { Logger } from "../src/index.js";
 import { DummyReactRenderer } from "../src/server/dummyReactRenderer.js";
 import { LogicManager } from "../src/server/logicManager.js";
 
-// MirageX relies on synchronous rendering (as with React 18's legacy root),
-// which React 19 no longer does by default. These check the order directly,
-// so they do not depend on timing.
+// MirageX relies on synchronous rendering, effects included, which React 19
+// no longer does by default. These check the order directly, so they do not
+// depend on timing.
 describe("DummyReactRenderer is synchronous", () => {
   it("render() returns after the first render and its effects", () => {
     const log: string[] = [];
@@ -80,6 +86,70 @@ describe("DummyReactRenderer is synchronous", () => {
     DummyReactRenderer.render(<Probe />);
     log.push("after render()");
     assert.deepEqual(log, ["render 0", "render 1", "after render()"]);
+  });
+});
+
+describe("DummyReactRenderer limits", () => {
+  it("stops an effect that keeps setting state, and unmounts the app", () => {
+    const log: string[] = [];
+    const Looping = () => {
+      const [n, setN] = useState(0);
+      useEffect(() => {
+        setN(n + 1);
+      }, [n]);
+      return null;
+    };
+    const App = () => {
+      useEffect(() => {
+        log.push("mount");
+        return () => {
+          log.push("unmount");
+        };
+      }, []);
+      return <Looping />;
+    };
+    const errors: unknown[] = [];
+    const original = console.error;
+    console.error = (error: unknown) => errors.push(error);
+    try {
+      DummyReactRenderer.render(<App />);
+    } finally {
+      console.error = original;
+    }
+    assert.deepEqual(log, ["mount", "unmount"]);
+    assert.ok(errors.length > 0);
+  });
+
+  it("shows a Suspense boundary's content once its data is ready", async () => {
+    const log: string[] = [];
+    let resolve: (value: string) => void = () => {};
+    const data = new Promise<string>((r) => {
+      resolve = r;
+    });
+    const Content = () => {
+      const value = use(data);
+      useEffect(() => {
+        log.push(value);
+      }, [value]);
+      return null;
+    };
+    const Fallback = () => {
+      useEffect(() => {
+        log.push("fallback");
+      }, []);
+      return null;
+    };
+    DummyReactRenderer.render(
+      <Suspense fallback={<Fallback />}>
+        <Content />
+      </Suspense>,
+    );
+    // Ready well within React's 300 ms throttle after the fallback.
+    setTimeout(() => resolve("content"), 10);
+    for (let i = 0; i < 200 && !log.includes("content"); i++) {
+      await new Promise((r) => setTimeout(r, 5));
+    }
+    assert.deepEqual(log, ["fallback", "content"]);
   });
 });
 
