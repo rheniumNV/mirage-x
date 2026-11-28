@@ -144,4 +144,15 @@ describe("build", () => {
     assert.ok(values.includes("unit-own"));
     assert.ok(values.includes("embedded-app"));
   });
+
+  it("fails at once for a frame without MirageX's layout", async () => {
+    const dir = tempDir();
+    // The core alone: no Static.AppRoot, no frame DV/ENV.
+    const coreOnly: Parameters<typeof build>[2] = ({ core }) => core;
+    await assert.rejects(
+      build(configFor(dir), unitsWith({}), coreOnly),
+      /MirageX's ENV at DV\/ENV and AppRoot\/Main\/DV\/ENV \(found 0\)/,
+    );
+    assert.equal(fs.existsSync(path.join(dir, "output.brson")), false);
+  });
 });

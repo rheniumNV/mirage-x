@@ -1,7 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { VERSION_VARIABLE, setAppVersion } from "./frame/env.js";
+import {
+  VERSION_VARIABLE,
+  mirageXEnvSlots,
+  setAppVersion,
+} from "./frame/env.js";
 import type { VersionSource } from "./frdt/versions.js";
 import {
   generateClient,
@@ -110,6 +114,15 @@ export const build = async (
   });
   output.renumberIds(ID_SEED);
   console.debug("end generating");
+  // Checked on every build, so a frame with another layout fails at once,
+  // not only when a later build has to update the version.
+  const envSlots = mirageXEnvSlots(output).length;
+  if (envSlots !== 2) {
+    throw new Error(
+      `The output must have MirageX's ENV at DV/ENV and AppRoot/Main/DV/ENV ` +
+        `(found ${envSlots}); place the core with placeCore`,
+    );
+  }
 
   const previous = readPrevious(outputBrsonPath);
   if (previousVersion && previous?.equals(output.writeBrson())) {
@@ -121,12 +134,11 @@ export const build = async (
     // Values only; ids and structure stay the same. Only MirageX's ENV
     // slots (frame and core), not variables of the same name in units or in
     // another app's ENV embedded in the frame or a unit.
-    const { envSlots, updated } = setAppVersion(output, newVersion);
-    if (envSlots !== 2 || updated !== 2) {
+    const { updated } = setAppVersion(output, newVersion);
+    if (updated !== 2) {
       throw new Error(
-        `${VERSION_VARIABLE} not found in MirageX's ENV slots (DV/ENV and ` +
-          `AppRoot/Main/DV/ENV; found ${envSlots} slots, ${updated} values); ` +
-          "the version cannot be updated",
+        `${VERSION_VARIABLE} not found in MirageX's ENV slots (${updated} ` +
+          "of 2 set); the version cannot be updated",
       );
     }
   }

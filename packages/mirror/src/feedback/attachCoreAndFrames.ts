@@ -16,11 +16,25 @@ export type AttachFeedbackPaths = {
   outputPath: string;
 };
 
-/** MirageX's ENV under `slot` (see `envUnder`); it must be there. */
+/**
+ * MirageX's ENV under `slot` (see `envUnder`); it must be there. Warns when
+ * the `DV` holds more than one ENV: the last is taken as MirageX's, which is
+ * wrong if another app's ENV was added after it in Resonite.
+ */
 const requireEnv = (slot: Slot): Slot => {
   const env = envUnder(slot);
   if (!env) {
     throw new Error(`Slot "DV/ENV" not found under "${slot.name()}"`);
+  }
+  const envs = requireChild(slot, "DV")
+    .children()
+    .filter((child) => child.name() === "ENV");
+  if (envs.length > 1) {
+    console.warn(
+      `"${slot.name()}/DV" has ${envs.length} ENV slots; the last is ` +
+        "removed as MirageX's. If another app's ENV was added after it, " +
+        "move that ENV before MirageX's in Resonite and save again",
+    );
   }
   return env;
 };

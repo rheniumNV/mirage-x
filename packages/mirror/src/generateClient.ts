@@ -23,6 +23,12 @@ export type MirrorUnits = {
   [category: string]: { [name: string]: Document };
 };
 
+/**
+ * Builds the output from the core and ENV. The output must have the layout
+ * `placeCore` makes: the root's `Static.AppRoot` pointing at the core root,
+ * ENV in the root's `DV`, and the core's own ENV in `Main/DV` (`build` checks
+ * this and finds MirageX's ENV there).
+ */
 export type GenerateFrame = (option: {
   appCode: string;
   /** The core with the units and its ENV in place. */
