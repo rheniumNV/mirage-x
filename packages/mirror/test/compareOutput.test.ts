@@ -4,7 +4,12 @@ import { describe, it } from "node:test";
 import { UnitProp, generateUnitConfig } from "@mirage-x/core";
 
 import { compareOutput } from "../src/compareOutput.js";
-import { setVariableValues, str } from "../src/frdt/util.js";
+import {
+  addValueVariable,
+  mirageXEnvSlots,
+  setVariableValues,
+  str,
+} from "../src/frdt/util.js";
 import { generateSimpleFrame } from "../src/frame/simpleFrame/index.js";
 import { generateClient } from "../src/generateClient.js";
 import { generateMirrorUnitFromFeedback } from "../src/unit/generateMirrorUnitFromFeedback.js";
@@ -44,6 +49,21 @@ describe("compareOutput", () => {
     const differences = compareOutput(output("1"), changed);
     assert.ok(differences.length > 0);
     assert.ok(differences.every((d) => d.right === '"Other"'));
+  });
+
+  it("compares the version of another app's ENV", () => {
+    const withEmbedded = (version: string) => {
+      const doc = output("1");
+      const env = doc.addSlot(doc.addSlot(doc.root(), "Embedded"), "ENV");
+      addValueVariable(doc, env, "Env.Version.Current", str(version));
+      return doc;
+    };
+    const differences = compareOutput(withEmbedded("a"), withEmbedded("b"));
+    assert.equal(differences.length, 1);
+  });
+
+  it("finds the frame's and the core's ENV", () => {
+    assert.equal(mirageXEnvSlots(output("1")).length, 2);
   });
 
   it("does not change the documents it compares", () => {

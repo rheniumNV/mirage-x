@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { setVariableValues, str } from "./frdt/util.js";
+import { mirageXEnvSlots, setVariableValues, str } from "./frdt/util.js";
 import type { VersionSource } from "./frdt/versions.js";
 import {
   generateClient,
@@ -119,12 +119,14 @@ export const build = async (
 
   if (previousVersion) {
     // Values only; ids and structure stay the same. Only MirageX's ENV
-    // slots (frame and core), not variables of the same name in units.
+    // slots (frame and core), not variables of the same name in units or in
+    // another app's ENV embedded in the frame.
+    const envIds = new Set(mirageXEnvSlots(output).map((slot) => slot.id()));
     const updated = setVariableValues(
       output,
       VERSION_VARIABLE,
       str(newVersion),
-      (slot) => slot.name() === "ENV",
+      (slot) => envIds.has(slot.id()),
     );
     if (updated === 0) {
       throw new Error(

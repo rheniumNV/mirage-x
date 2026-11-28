@@ -1,16 +1,17 @@
 import { Document, compare, type Difference } from "@frdt/frdt";
 
 import { VERSION_VARIABLE } from "./build.js";
-import { setVariableValues, str } from "./frdt/util.js";
+import { mirageXEnvSlots, setVariableValues, str } from "./frdt/util.js";
 
 /** A copy of `doc` with the app version in MirageX's ENV slots cleared. */
 const withoutAppVersion = (doc: Document): Document => {
   const copy = Document.open(doc.writeBrson());
+  const envIds = new Set(mirageXEnvSlots(copy).map((slot) => slot.id()));
   setVariableValues(
     copy,
     VERSION_VARIABLE,
     str(""),
-    (slot) => slot.name() === "ENV",
+    (slot) => envIds.has(slot.id()),
   );
   return copy;
 };

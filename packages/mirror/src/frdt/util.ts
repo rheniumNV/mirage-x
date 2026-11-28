@@ -59,6 +59,31 @@ export const requireReference = (slot: Slot, name: string): string => {
   return id;
 };
 
+/**
+ * The ENV slots MirageX places in an output: the frame's (`DV/ENV` under the
+ * root) and the core's (`Main/DV/ENV` under `Static.AppRoot`). Found by where
+ * they are, not by name, so an ENV of another app embedded in the frame or in
+ * a unit is left alone.
+ */
+export const mirageXEnvSlots = (doc: Document): Slot[] => {
+  const root = doc.root();
+  const envUnder = (slot: Slot | undefined) => {
+    const dv = slot && childNamed(slot, "DV");
+    return dv && childNamed(dv, "ENV");
+  };
+  const appRootId = referenceOf(root, "Static.AppRoot");
+  let appRoot: Slot | undefined;
+  try {
+    appRoot = appRootId ? doc.slotById(appRootId) : undefined;
+  } catch {
+    appRoot = undefined;
+  }
+  const main = appRoot && childNamed(appRoot, "Main");
+  return [envUnder(root), envUnder(main)].filter(
+    (slot): slot is Slot => slot !== undefined,
+  );
+};
+
 /** Every slot under `slot`, depth first, `slot` included. */
 export const allSlots = (slot: Slot): Slot[] => [
   slot,
