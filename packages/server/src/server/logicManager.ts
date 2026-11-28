@@ -185,10 +185,14 @@ export class LogicManager {
   }
 
 
+  // Rendered before returning, so that `close()` has unmounted the units (and
+  // run their cleanups) before the maps below are cleared.
   syncProps() {
-    this.propsSetter({
-      authentication: this.authentication,
-      closed: this.closed,
+    DummyReactRenderer.flushSync(() => {
+      this.propsSetter({
+        authentication: this.authentication,
+        closed: this.closed,
+      });
     });
   }
 

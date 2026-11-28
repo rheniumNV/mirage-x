@@ -1,7 +1,7 @@
 import { createContext, type ReactElement } from "react";
 import Reconciler from "react-reconciler";
 import {
-  DefaultEventPriority,
+  DiscreteEventPriority,
   LegacyRoot,
   NoEventPriority,
 } from "react-reconciler/constants.js";
@@ -10,6 +10,16 @@ import {
  * A renderer with no host output. Units report their changes from effects
  * (see `generateMain`), so React only has to run the components; every host
  * hook here is a no-op.
+ *
+ * MirageX needs rendering to be synchronous, as with React 18's legacy root:
+ * when `render()` or `flushSync()` returns, the tree has been rendered and its
+ * effects have run (so the sync events have been emitted and the props
+ * setter is registered). React 19 has no legacy mode (react-reconciler 0.31+
+ * treats every root as concurrent and schedules renders), so:
+ * - `render()` uses `updateContainerSync` + `flushSyncWork`;
+ * - every update gets the discrete (sync) priority, which React renders in a
+ *   microtask and whose passive effects it flushes right after the commit;
+ * - `flushSync(fn)` renders the updates made in `fn` before it returns.
  */
 
 const emptyObject = {};
@@ -36,6 +46,8 @@ const TinyDOMRenderer = Reconciler({
     ),
 
   supportsMutation: false,
+  supportsMicrotasks: true,
+  scheduleMicrotask: (fn: () => unknown) => queueMicrotask(fn as () => void),
   supportsHydration: false,
   supportsPersistence: false,
   isPrimaryRenderer: true,
@@ -74,10 +86,11 @@ const TinyDOMRenderer = Reconciler({
     currentUpdatePriority = priority;
   },
   getCurrentUpdatePriority: () => currentUpdatePriority,
+  // Every update is a discrete (sync) update; see the comment at the top.
   resolveUpdatePriority: () =>
     currentUpdatePriority !== NoEventPriority
       ? currentUpdatePriority
-      : DefaultEventPriority,
+      : DiscreteEventPriority,
   resolveEventType: () => null,
   resolveEventTimeStamp: () => -1.1,
   trackSchedulerEvent: () => {},
@@ -121,7 +134,13 @@ export const DummyReactRenderer = {
       () => {},
       null,
     );
-    TinyDOMRenderer.updateContainer(element, newRoot, null);
+    TinyDOMRenderer.updateContainerSync(element, newRoot, null, null);
+    TinyDOMRenderer.flushSyncWork();
     return newRoot;
+  },
+
+  /** Run `fn` and render the updates it made before returning. */
+  flushSync<R>(fn: () => R): R {
+    return TinyDOMRenderer.flushSyncFromReconciler(fn);
   },
 };

@@ -6,11 +6,8 @@ import { DummyReactRenderer } from "../src/server/dummyReactRenderer.js";
 import { render } from "../src/server/render.js";
 import { LogContext, Logger, useLogger } from "../src/index.js";
 
-/** Give the renderer a moment (rendering is synchronous; this is a margin). */
-const tick = () => new Promise((resolve) => setTimeout(resolve, 10));
-
 describe("useLogger / LogContext", () => {
-  it("gives a component the logger MirageX provides, and a child logger under LogContext", async () => {
+  it("gives a component the logger MirageX provides, and a child logger under LogContext", () => {
     const root = new Logger({ contextName: "root", logLevel: "error" });
     const seen: Array<{ where: string; logger: Logger }> = [];
     const Probe = ({ where }: { where: string }) => {
@@ -25,7 +22,6 @@ describe("useLogger / LogContext", () => {
         </LogContext>
       </LoggerProvider>,
     );
-    await tick();
     const app = seen.find((s) => s.where === "app")?.logger;
     const child = seen.find((s) => s.where === "child")?.logger;
     assert.equal(app, root);
@@ -33,7 +29,7 @@ describe("useLogger / LogContext", () => {
     assert.notEqual(child, root);
   });
 
-  it("an app rendered by MirageXServer's render() gets the logger it was given", async () => {
+  it("an app rendered by MirageXServer's render() gets the logger it was given", () => {
     const logger = new Logger({ contextName: "server", logLevel: "error" });
     const seen: Logger[] = [];
     const App = () => {
@@ -52,12 +48,11 @@ describe("useLogger / LogContext", () => {
         platformApiUrl="http://127.0.0.1:9/"
       />,
     );
-    await tick();
     assert.ok(seen.length > 0, "App was not rendered");
     assert.ok(seen.every((l) => l === logger));
   });
 
-  it("throws outside MirageX's logger", async () => {
+  it("throws outside MirageX's logger", () => {
     const Probe = () => {
       useLogger();
       return null;
@@ -67,8 +62,7 @@ describe("useLogger / LogContext", () => {
     console.error = (error: unknown) => errors.push(error);
     try {
       DummyReactRenderer.render(<Probe />);
-      await tick();
-    } finally {
+      } finally {
       console.error = original;
     }
     assert.ok(

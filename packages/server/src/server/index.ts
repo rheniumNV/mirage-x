@@ -8,6 +8,7 @@ import type { ReactElement } from "react";
 import { WebSocketServer, type WebSocket } from "ws";
 import type { Logger } from "../logger/index.js";
 import { Connection } from "./connection.js";
+import { DummyReactRenderer } from "./dummyReactRenderer.js";
 
 export type MirageXServerConfig = {
   mirage: {
@@ -280,7 +281,10 @@ export class MirageXServer {
     try {
       const invoke = () => {
         try {
-          const result = func({ userId, lang }, ...(args as unknown[]));
+          // The state updates the handler makes are rendered before this returns.
+          const result = DummyReactRenderer.flushSync(() =>
+            func({ userId, lang }, ...(args as unknown[])),
+          );
           if (isPromise(result)) {
             result.catch((e: unknown) => {
               console.error("catch interactionEvent error", e);
