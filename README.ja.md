@@ -210,7 +210,7 @@ server.listen(3100);
    作業用のファイル `ResFeedbackOriginal.brson` と `ResFeedbackMetaOriginal.json` は gitignore し、各 Unit の `ResFeedback.brson`（と `ResFeedbackMeta.json`）をコミットします。
 4. `output.brson` をビルドし直します。
 
-取り込み時には、開発環境の接続先（`Static.Web.Host`、`http://` / `ws://` の URL）を空にします。中身が変わっていない Unit は書き換えません。
+取り込み時には、開発環境の接続先（`Static.Web.Host` などに入った `localhost` やプライベート IP などのローカルのホスト、`http://` / `ws://` の URL）を空にします。それ以外のホスト（frame に埋め込まれた別アプリの接続先など）は残します。中身が変わっていない Unit は書き換えません。
 
 ## Resonite のバージョン
 

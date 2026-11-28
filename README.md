@@ -210,7 +210,7 @@ A new Unit's template is empty. You give it its look in Resonite and pull it bac
    Gitignore the staging files `ResFeedbackOriginal.brson` and `ResFeedbackMetaOriginal.json`; commit each Unit's `ResFeedback.brson` (and `ResFeedbackMeta.json`).
 4. Rebuild `output.brson`.
 
-On attach, the developer's local connection settings (`Static.Web.Host`, `http://` / `ws://` URLs) are cleared, and a Unit whose content did not change is not rewritten.
+On attach, the developer's local connection settings (a local host such as `localhost` or a private IP in `Static.Web.Host` and similar variables, `http://` / `ws://` URLs) are cleared; other hosts, such as those of another app embedded in a frame, are kept. A Unit whose content did not change is not rewritten.
 
 ## Resonite versions
 

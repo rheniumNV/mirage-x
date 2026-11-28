@@ -17,52 +17,80 @@ export const unwrapHolder = (doc: Document): Document => {
 
 const FRAMEWORK = "[FrooxEngine]FrooxEngine.";
 
-/** Dynamic variables that hold a host or URL to connect to. */
-const HOST_VARIABLES = new Set([
-  "Static.Web.Host",
-  "Static.Web.Url.Ws",
-  "Static.Web.Url.Http",
-  "Env.Host.Fallback",
-]);
+/**
+ * `DynamicValueVariable<string>`s that hold a host to connect to. (The
+ * `Static.Web.Url.*` variables are `Uri`s driven from these at run time and
+ * are left as they are.)
+ */
+const HOST_VARIABLES = new Set(["Static.Web.Host", "Env.Host.Fallback"]);
 
-const isDebugUrl = (url: string) =>
-  url.includes("http://") || url.includes("ws://");
+/** An unencrypted `http://` / `ws://` URL (`@` is how Resonite saves a Uri). */
+const isDebugUrl = (value: string) => /^\s*@?(http|ws):\/\//i.test(value);
 
-/** The host name in a host (`name:port`) or a URL. */
+/** The host name in a host (`name:port`) or a URL, lower case. */
 const hostOf = (value: string): string => {
-  const withoutScheme = value.trim().replace(/^[a-z][a-z0-9+.-]*:\/\//i, "");
+  const withoutScheme = value
+    .trim()
+    .replace(/^@/, "")
+    .replace(/^[a-z][a-z0-9+.-]*:\/\//i, "");
   const authority = withoutScheme.split(/[/?#]/)[0] ?? "";
-  const host = authority.includes("@")
-    ? authority.slice(authority.lastIndexOf("@") + 1)
-    : authority;
+  const host = authority.slice(authority.lastIndexOf("@") + 1).toLowerCase();
   if (host.startsWith("[")) {
-    return host.slice(1, host.indexOf("]")).toLowerCase();
+    return host.slice(1, host.indexOf("]"));
   }
-  return host.split(":")[0]!.toLowerCase();
+  // A bare IPv6 address (more than one colon) has no port to strip.
+  if (host.indexOf(":") !== host.lastIndexOf(":")) {
+    return host;
+  }
+  return host.split(":")[0]!.replace(/\.$/, "");
 };
 
-/** A host on the developer's machine or network (loopback, private, .local). */
-const isLocalHost = (host: string): boolean => {
-  if (
-    host === "localhost" ||
-    host.endsWith(".localhost") ||
-    host.endsWith(".local") ||
-    host === "::1" ||
-    host === "0.0.0.0"
-  ) {
-    return true;
+/** The four parts of a dotted IPv4 address, or `null`. */
+const ipv4Of = (host: string): number[] | null => {
+  const parts = host.split(".");
+  if (parts.length !== 4 || !parts.every((p) => /^\d{1,3}$/.test(p))) {
+    return null;
   }
-  const ip = host.split(".").map(Number);
-  if (ip.length !== 4 || ip.some((n) => !Number.isInteger(n))) {
-    return false;
+  const numbers = parts.map(Number);
+  return numbers.every((n) => n <= 255) ? numbers : null;
+};
+
+const isLocalIpv4 = ([a, b]: number[]): boolean =>
+  a === 127 || // loopback
+  a === 10 ||
+  (a === 172 && b! >= 16 && b! <= 31) ||
+  (a === 192 && b === 168) || // private
+  (a === 100 && b! >= 64 && b! <= 127) || // shared (CGNAT, Tailscale)
+  (a === 169 && b === 254) || // link-local
+  (a === 0 && b === 0);
+
+const isLocalIpv6 = (host: string): boolean => {
+  const mapped = host.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+  if (mapped) {
+    const ip = ipv4Of(mapped[1]!);
+    return ip !== null && isLocalIpv4(ip);
   }
-  const [a, b] = ip as [number, number, number, number];
   return (
-    a === 127 ||
-    a === 10 ||
-    (a === 192 && b === 168) ||
-    (a === 172 && b >= 16 && b <= 31) ||
-    (a === 169 && b === 254)
+    /^(0*:)*:?0*1$/.test(host) || // ::1, 0:0:0:0:0:0:0:1
+    /^(0*:)*:?0*$/.test(host) || // ::
+    /^fe[89ab][0-9a-f]?:/.test(host) || // link-local
+    /^f[cd][0-9a-f]{0,2}:/.test(host) // unique local
+  );
+};
+
+/**
+ * A host on the developer's machine or network: `localhost`, a name with no
+ * dot (a PC on the LAN), a local domain (`.local`, `.lan`, `.internal`,
+ * `.home.arpa`), or a loopback, private, shared or link-local IP.
+ */
+const isLocalHost = (host: string): boolean => {
+  if (host === "") return false;
+  if (host.includes(":")) return isLocalIpv6(host);
+  const ip = ipv4Of(host);
+  if (ip) return isLocalIpv4(ip);
+  return (
+    !host.includes(".") ||
+    /\.(localhost|local|lan|internal|home\.arpa)$/.test(host)
   );
 };
 
@@ -84,11 +112,12 @@ const read = (slot: Slot, i: number, field: string): Value | null | undefined =>
 
 /**
  * Clear the developer's local connection settings that a feedback picks up
- * while it is saved from a local session (local hosts such as `localhost` or
- * a private IP, debug `http://` / `ws://` URLs, a connected
- * `WebsocketClient`). MirageX sets these at run time. Other values, such as
- * the production host of another app embedded in a frame, are kept. Returns
- * how many fields were changed.
+ * while it is saved from a local session: a local host (see `isLocalHost`) or
+ * a debug `http://` / `ws://` URL in `Static.Web.Host`, `Env.Host.Fallback`,
+ * a cloud variable's fallback or a `WebsocketClient` (which is disconnected),
+ * and a debug URL of a `StaticBinary`. MirageX sets its own at build and run
+ * time. Other values, such as the production host of another app embedded in
+ * a frame, are kept. Returns how many fields were changed.
  */
 export const sanitizeFeedback = (doc: Document): number => {
   let changed = 0;
@@ -114,7 +143,7 @@ export const sanitizeFeedback = (doc: Document): number => {
       }
       if (typeName.startsWith(`${FRAMEWORK}CloudValueVariableDriver<`)) {
         const fallback = stringOf(read(slot, i, "FallbackValue"));
-        if (fallback && isDebugUrl(fallback)) {
+        if (fallback && isDevelopmentValue(fallback)) {
           clear(slot, i, "FallbackValue", str(""));
         }
         return;
@@ -128,7 +157,7 @@ export const sanitizeFeedback = (doc: Document): number => {
       }
       if (typeName === `${FRAMEWORK}WebsocketClient`) {
         const url = stringOf(read(slot, i, "URL"));
-        if (url && isDebugUrl(url)) {
+        if (url && isDevelopmentValue(url)) {
           clear(slot, i, "URL", str(""));
           clear(slot, i, "IsConnected", bool(false));
         }

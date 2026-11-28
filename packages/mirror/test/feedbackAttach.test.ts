@@ -254,7 +254,7 @@ describe("sanitizeFeedback", () => {
     assert.deepEqual(variableValues(doc, "Env.Version.Current"), ["1", "1"]);
   });
 
-  it("keeps a production host, such as another app's embedded in a frame", () => {
+  it("keeps a production host (another app's, embedded in a frame)", () => {
     const doc = savedClient();
     // Only the string variables (other components share the name).
     const setHost = (name: string) =>
@@ -275,6 +275,32 @@ describe("sanitizeFeedback", () => {
     }
   });
 
+  it("disconnects a WebsocketClient on the LAN, keeps a production one", () => {
+    const urlAfterSanitize = (url: string) => {
+      const doc = savedClient();
+      const ws = allSlots(doc.root()).find((slot) => slot.name() === "WS");
+      assert.ok(ws);
+      const client = ws.components().findIndex(({ typeName }) =>
+        typeName === "[FrooxEngine]FrooxEngine.WebsocketClient",
+      );
+      ws.setComponentValue(client, "URL", str(url));
+      ws.setComponentValue(client, "IsConnected", bool(true));
+      sanitizeFeedback(doc);
+      return [
+        ws.componentValue(client, "URL"),
+        ws.componentValue(client, "IsConnected"),
+      ];
+    };
+    assert.deepEqual(urlAfterSanitize("wss://192.168.1.2:3100/"), [
+      str(""),
+      bool(false),
+    ]);
+    assert.deepEqual(urlAfterSanitize("wss://app.example.com/"), [
+      str("wss://app.example.com/"),
+      bool(true),
+    ]);
+  });
+
   it("tells development values from production ones", () => {
     const development = [
       "localhost:3100",
@@ -293,6 +319,23 @@ describe("sanitizeFeedback", () => {
       "ws://app.example.com/ws",
       "wss://localhost:3100/ws",
       "https://user@192.168.0.3:8443/",
+      "HTTP://app.example.com/",
+      "@ws://localhost:3100/",
+      "  wss://localhost:3100  ",
+      "desktop-abc:3100",
+      "localhost.",
+      "app.local.",
+      "mypc.lan",
+      "host.docker.internal",
+      "nas.home.arpa",
+      "100.64.0.1",
+      "100.127.255.254",
+      "::1",
+      "[0:0:0:0:0:0:0:1]:3100",
+      "[::]:3100",
+      "[fe80::1]",
+      "[fd12:3456::1]:3100",
+      "[::ffff:127.0.0.1]:3100",
     ];
     const production = [
       "app.example.com",
@@ -303,6 +346,16 @@ describe("sanitizeFeedback", () => {
       "11.0.0.1",
       "192.169.0.1",
       "localhost.example.com",
+      "https://app.example.com/?next=http://x",
+      "wss://app.example.com/p?r=ws://",
+      "100.63.0.1",
+      "100.128.0.1",
+      "10.0.0.256",
+      "10..0.1",
+      "0x0a.0.0.1",
+      "[2001:db8::1]:443",
+      "[::ffff:8.8.8.8]",
+      "",
     ];
     for (const value of development) {
       assert.equal(isDevelopmentValue(value), true, value);
