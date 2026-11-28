@@ -19,15 +19,20 @@ import {
  * renders), so:
  * - `render()` uses `updateContainerSync` + `flushSyncWork`;
  * - every update that is not a transition gets the discrete (sync) priority,
- *   including updates made in effects. React renders those in a microtask
+ *   including updates made in effects (rendered at the end of the current
+ *   work). Outside React's own work, React renders them in a microtask
  *   (`scheduleMicrotask`) and runs their effects right after the commit;
  * - `flushSync(fn)` renders the updates made in `fn` before it returns, unless
  *   it is called while React is rendering or committing (then they are
  *   rendered at the end of that work).
  *
  * Transitions (`startTransition`, `useDeferredValue`) and Suspense retries
- * are still scheduled (`scheduleTimeout` is the real `setTimeout`, so a
- * Suspense boundary shows its content once the data is ready).
+ * are still scheduled (`scheduleTimeout` is Node's `setTimeout`, so a
+ * Suspense boundary shows its content once the data is ready, after React's
+ * throttle of up to 300 ms after the fallback).
+ *
+ * `render()` uses `updateContainerSync` so that the first render does not
+ * depend on `resolveUpdatePriority` below.
  *
  * Since updates in effects are sync, an effect that keeps setting state stops
  * with React's "Maximum update depth exceeded" error after about 50 renders
@@ -132,7 +137,8 @@ export const DummyReactRenderer = {
     };
     const newRoot = TinyDOMRenderer.createContainer(
       dummyInstance,
-      // Ignored since react-reconciler 0.31: every root is concurrent.
+      // Since react-reconciler 0.31 every root is concurrent; the tag is not a
+      // legacy (sync) mode any more.
       ConcurrentRoot,
       null,
       // Not strict: React 19 would mount every effect twice in development,

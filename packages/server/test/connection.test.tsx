@@ -1,12 +1,18 @@
 import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
 import { describe, it } from "node:test";
-import { useEffect, useState, type ReactElement } from "react";
+import {
+  Activity,
+  useEffect,
+  useState,
+  type ReactElement,
+} from "react";
 import type { WebSocket } from "ws";
 
 import { UnitProp, generateUnitConfig } from "@mirage-x/core";
 import { Logger, generateMain } from "../src/index.js";
 import { Connection } from "../src/server/connection.js";
+import { DummyReactRenderer } from "../src/server/dummyReactRenderer.js";
 
 const Host = generateMain(
   generateUnitConfig({
@@ -102,7 +108,7 @@ describe("Connection", () => {
     return { ws, connection, synced };
   };
 
-  /** Run `fn` with a quiet console, and close the connection even if it throws. */
+  /** Run `fn` with a quiet console; close the connection even if it throws. */
   const withConnection = async (
     connect: () => ReturnType<typeof open>,
     fn: (opened: ReturnType<typeof open>) => Promise<void>,
@@ -155,8 +161,8 @@ describe("Connection", () => {
     ));
 
   it("drops a unit removed while it waits for its parent", () => {
-    // The leaf is removed by an effect, in the same synchronous render, while
-    // its generateUnit waits for the host.
+    // The leaf is removed by an effect, in the same `render()` call, while its
+    // generateUnit waits for the host.
     const Removing = () => {
       const [show, setShow] = useState(true);
       useEffect(() => setShow(false), []);
@@ -177,6 +183,32 @@ describe("Connection", () => {
           "initUnitPropOrigin Test/Host",
           "generateUnit Test/Host",
         ]);
+      },
+    );
+  });
+
+  it("sends a unit shown again with the same id only once", () => {
+    // Hidden and shown again (same id) while its generateUnit still waits.
+    let setMode: (mode: "visible" | "hidden") => void = () => {};
+    const Toggling = () => {
+      const [mode, set] = useState<"visible" | "hidden">("visible");
+      setMode = set;
+      return (
+        <Host>
+          <Activity mode={mode}>
+            <Leaf label="hello" />
+          </Activity>
+        </Host>
+      );
+    };
+    return withConnection(
+      () => open(Toggling),
+      async ({ synced }) => {
+        DummyReactRenderer.flushSync(() => setMode("hidden"));
+        DummyReactRenderer.flushSync(() => setMode("visible"));
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        const leaves = synced().filter((s) => s === "generateUnit Test/Leaf");
+        assert.equal(leaves.length, 1);
       },
     );
   });

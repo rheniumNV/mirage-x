@@ -161,20 +161,21 @@ export class LogicManager {
       this.syncEventCallback?.(event);
       if (event.type === "generateUnit") {
         const unit = this.unitMap.get(event.unit.id);
-        if (unit) {
-          this.unitMap.set(event.unit.id, { ...unit, generated: true });
-        }
+        // In place: a waiting event checks it still has the same entry.
+        if (unit) unit.generated = true;
       }
     };
 
     if (event.type === "destroyUnit" || isValidUnit(event, this.unitMap)) {
       sendEvent();
     } else {
+      const entry = this.unitMap.get(event.unit.id);
       const wait4Send = () => {
         setTimeout(() => {
           // Stop once nothing can send it: the manager is closed, or the unit
-          // was removed before it could be generated.
-          if (this.closed || !this.unitMap.has(event.unit.id)) return;
+          // was removed before it could be generated. A unit shown again with
+          // the same id (`<Activity>`) has a new entry and its own events.
+          if (this.closed || this.unitMap.get(event.unit.id) !== entry) return;
           if (isValidUnit(event, this.unitMap)) {
             sendEvent();
           } else {
