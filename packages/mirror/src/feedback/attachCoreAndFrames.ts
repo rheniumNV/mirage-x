@@ -1,6 +1,7 @@
-import type { Document } from "@frdt/frdt";
+import type { Document, Slot } from "@frdt/frdt";
 
 import { requireChild, requireReference, stringOf, variableIndex } from "../frdt/util.js";
+import { envUnder } from "../frame/env.js";
 import {
   extractPart,
   readStagedFeedback,
@@ -13,6 +14,29 @@ export type AttachFeedbackPaths = {
   inputPath: string;
   /** Directory to write `ResFeedback.brson` / `ResFeedbackMeta.json` to. */
   outputPath: string;
+};
+
+/**
+ * MirageX's ENV under `slot` (see `envUnder`); it must be there. Warns when
+ * the `DV` holds more than one ENV: the last is taken as MirageX's, which is
+ * wrong if another app's ENV was added after it in Resonite.
+ */
+const requireEnv = (slot: Slot): Slot => {
+  const env = envUnder(slot);
+  if (!env) {
+    throw new Error(`Slot "DV/ENV" not found under "${slot.name()}"`);
+  }
+  const envs = requireChild(slot, "DV")
+    .children()
+    .filter((child) => child.name() === "ENV");
+  if (envs.length > 1) {
+    console.warn(
+      `"${slot.name()}/DV" has ${envs.length} ENV slots; the last is ` +
+        "removed as MirageX's. If another app's ENV was added after it, " +
+        "move that ENV before MirageX's in Resonite and save again",
+    );
+  }
+  return env;
 };
 
 /** The slot the root's `Static.AppRoot` points at. */
@@ -32,7 +56,7 @@ export const attachCore = (option: AttachFeedbackPaths): void => {
   for (const child of appRoot.children()) {
     if (child.id() !== main.id()) doc.removeSlot(child);
   }
-  doc.removeSlot(requireChild(requireChild(main, "DV"), "ENV"));
+  doc.removeSlot(requireEnv(main));
   for (const child of requireChild(main, "Package").children()) {
     doc.removeSlot(child);
   }
@@ -75,7 +99,7 @@ const attachFrame = (
   }
 
   doc.removeSlot(requireChild(appRootOf(doc), "Main"));
-  doc.removeSlot(requireChild(requireChild(root, "DV"), "ENV"));
+  doc.removeSlot(requireEnv(root));
 
   writePart({
     outputDir: option.outputPath,

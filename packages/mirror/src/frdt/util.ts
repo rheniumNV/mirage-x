@@ -29,6 +29,13 @@ export const stringOf = (value: Value | null | undefined): string | null =>
 export const childNamed = (slot: Slot, name: string): Slot | undefined =>
   slot.children().find((child) => child.name() === name);
 
+/** The last child named `name` (the one added last), or `undefined`. */
+export const lastChildNamed = (slot: Slot, name: string): Slot | undefined =>
+  slot
+    .children()
+    .filter((child) => child.name() === name)
+    .at(-1);
+
 export const requireChild = (slot: Slot, name: string): Slot => {
   const child = childNamed(slot, name);
   if (!child) {

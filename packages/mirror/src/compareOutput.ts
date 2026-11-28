@@ -1,23 +1,18 @@
 import { Document, compare, type Difference } from "@frdt/frdt";
 
-import { VERSION_VARIABLE } from "./build.js";
-import { setVariableValues, str } from "./frdt/util.js";
+import { setAppVersion } from "./frame/env.js";
 
 /** A copy of `doc` with the app version in MirageX's ENV slots cleared. */
 const withoutAppVersion = (doc: Document): Document => {
   const copy = Document.open(doc.writeBrson());
-  setVariableValues(
-    copy,
-    VERSION_VARIABLE,
-    str(""),
-    (slot) => slot.name() === "ENV",
-  );
+  setAppVersion(copy, "");
   return copy;
 };
 
 /**
  * Compare two `build` outputs by structure and values (frdt `compare`: ids
- * are not compared), ignoring the app version `build` writes into ENV.
+ * are not compared), ignoring the app version `build` writes into MirageX's
+ * ENV slots (the version of another app's ENV embedded in it is compared).
  * An empty result means the outputs are the same apart from that.
  */
 export const compareOutput = (

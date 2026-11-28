@@ -115,13 +115,19 @@ describe("build", () => {
 
   it("updates the version only in MirageX's ENV slots", async () => {
     const dir = tempDir();
-    // A unit with its own variable of the same name.
+    // A unit with its own variable of the same name, and an ENV slot of
+    // another app embedded in it.
     const unitsWithOwnVersion = () => {
       const units = unitsWith({ size: UnitProp.Float(1) });
       const unit = units.Test.Panel;
       addValueVariable(unit, unit.root(), "Env.Version.Current", {
         kind: "string",
         value: "unit-own",
+      });
+      const embedded = unit.addSlot(unit.addSlot(unit.root(), "DV"), "ENV");
+      addValueVariable(unit, embedded, "Env.Version.Current", {
+        kind: "string",
+        value: "embedded-app",
       });
       return units;
     };
@@ -136,5 +142,17 @@ describe("build", () => {
     const values = versionsIn(path.join(dir, "output.brson"));
     assert.equal(values.filter((v) => v === second.version).length, 2);
     assert.ok(values.includes("unit-own"));
+    assert.ok(values.includes("embedded-app"));
+  });
+
+  it("fails at once for a frame without MirageX's layout", async () => {
+    const dir = tempDir();
+    // The core alone: no Static.AppRoot, no frame DV/ENV.
+    const coreOnly: Parameters<typeof build>[2] = ({ core }) => core;
+    await assert.rejects(
+      build(configFor(dir), unitsWith({}), coreOnly),
+      /MirageX's ENV at DV\/ENV and AppRoot\/Main\/DV\/ENV \(found 0\)/,
+    );
+    assert.equal(fs.existsSync(path.join(dir, "output.brson")), false);
   });
 });

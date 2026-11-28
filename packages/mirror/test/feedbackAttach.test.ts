@@ -17,6 +17,7 @@ import { readFeedback } from "../src/feedback/feedbackFile.js";
 import { sanitizeFeedback } from "../src/feedback/sanitize.js";
 import { STAGED_FEEDBACK, STAGED_META } from "../src/feedback/staging.js";
 import {
+  addValueVariable,
   allSlots,
   childNamed,
   importSlots,
@@ -136,6 +137,38 @@ describe("feedback attach", () => {
     const install = tempDir();
     attachInstallFrame({ inputPath: input, outputPath: install });
     assert.deepEqual(fs.readdirSync(install), []);
+  });
+
+  it("attachSimpleFrame keeps an ENV of another app placed before MirageX's", () => {
+    const doc = savedClient();
+    const dv = requireChild(doc.root(), "DV");
+    const ours = dv.children().filter((child) => child.name() === "ENV");
+    assert.equal(ours.length, 1);
+    // Another app's ENV, then MirageX's again last (as placeCore leaves it).
+    const foreign = doc.addSlot(dv, "ENV");
+    addValueVariable(doc, foreign, "Env.AppCode", str("OtherApp"));
+    doc.moveSlot(ours[0]!, doc.root());
+    doc.moveSlot(ours[0]!, dv);
+    const warnings: unknown[] = [];
+    const original = console.warn;
+    console.warn = (message: unknown) => warnings.push(message);
+    const simple = tempDir();
+    try {
+      attachSimpleFrame({ inputPath: staged(doc), outputPath: simple });
+    } finally {
+      console.warn = original;
+    }
+    const frame = readFeedback(path.join(simple, "ResFeedback.brson"));
+    const envs = requireChild(frame.root(), "DV")
+      .children()
+      .filter((child) => child.name() === "ENV");
+    assert.equal(envs.length, 1);
+    const appCode = envs[0]!.components().map((_, i) => ({
+      name: stringOf(envs[0]!.tryComponentValue(i, "VariableName")),
+      value: stringOf(envs[0]!.tryComponentValue(i, "Value")),
+    }));
+    assert.deepEqual(appCode, [{ name: "Env.AppCode", value: "OtherApp" }]);
+    assert.ok(warnings.some((w) => String(w).includes("2 ENV slots")));
   });
 
   it("attachInstallFrame removes the core and ENV; other frames are skipped", () => {
