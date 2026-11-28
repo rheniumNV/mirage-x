@@ -55,6 +55,27 @@ describe("partVersions", () => {
     assert.match(result.warnings[0]!, /unit 2026\.1\.2\.3, frame 2026\.9\.18\.82/);
   });
 
+  it("names a few parts in a warning and all of them in the details", () => {
+    const units = Array.from({ length: 10 }, (_, i) =>
+      part(`Test/Unit${i}`, `2024.7.${i + 1}.1`, flags()),
+    );
+    const result = partVersions([
+      part("frame", "2026.9.18.82", flags("A")),
+      ...units,
+    ]);
+    assert.deepEqual(result.warnings, [
+      "Parts were saved by Resonite versions more than 90 days apart " +
+        "(2024.7.1.1 to 2026.9.18.82); the output uses the oldest " +
+        "(2024.7.1.1); oldest first: 11 parts: Test/Unit0 2024.7.1.1, " +
+        "Test/Unit1 2024.7.2.1, Test/Unit2 2024.7.3.1, … and 8 more",
+      "FeatureFlag A is left out because some parts do not have it: " +
+        "10 parts: Test/Unit0, Test/Unit1, Test/Unit2, … and 7 more",
+    ]);
+    assert.equal(result.details.length, 2);
+    assert.match(result.details[0]!, /Test\/Unit9 2024\.7\.10\.1, frame 2026/);
+    assert.match(result.details[1]!, /Test\/Unit8, Test\/Unit9$/);
+  });
+
   it("is quiet when the parts agree", () => {
     const result = partVersions([
       part("frame", "2026.9.18.82", flags("A", "B")),
@@ -64,6 +85,7 @@ describe("partVersions", () => {
       versionNumber: "2026.9.18.82",
       featureFlags: flags("A", "B"),
       warnings: [],
+      details: [],
     });
   });
 });
@@ -84,14 +106,15 @@ describe("typeVersionWarnings", () => {
         withType("Test/A", null),
         withType("Test/B", 1),
         part("Test/C", "2026.9.18.82", flags()),
-      ]),
+      ]).warnings,
       [`TypeVersion of ${GRABBABLE} is 2 in the output but differs in: Test/A 0, Test/B 1`],
     );
   });
 
   it("is quiet when the entries match", () => {
     assert.deepEqual(
-      typeVersionWarnings(withType("output", null).doc, [withType("core", null)]),
+      typeVersionWarnings(withType("output", null).doc, [withType("core", null)])
+        .warnings,
       [],
     );
   });
