@@ -14,7 +14,10 @@ import {
 } from "../src/feedback/attachCoreAndFrames.js";
 import { attachUnits } from "../src/feedback/attachUnits.js";
 import { readFeedback } from "../src/feedback/feedbackFile.js";
-import { sanitizeFeedback } from "../src/feedback/sanitize.js";
+import {
+  isDevelopmentValue,
+  sanitizeFeedback,
+} from "../src/feedback/sanitize.js";
 import { STAGED_FEEDBACK, STAGED_META } from "../src/feedback/staging.js";
 import {
   allSlots,
@@ -249,6 +252,149 @@ describe("sanitizeFeedback", () => {
     assert.deepEqual(ws.componentValue(client, "IsConnected"), bool(false));
     // Other values are left alone.
     assert.deepEqual(variableValues(doc, "Env.Version.Current"), ["1", "1"]);
+  });
+
+  it("keeps a production host (another app's, embedded in a frame)", () => {
+    const doc = savedClient();
+    // Only the string variables (other components share the name).
+    const setHost = (name: string) =>
+      setVariableValues(doc, name, str("app.example.com"), (slot) =>
+        slot.components().some(
+          ({ typeName }, i) =>
+            typeName.endsWith("DynamicValueVariable<string>") &&
+            stringOf(slot.tryComponentValue(i, "VariableName")) === name,
+        ),
+      );
+    setHost("Static.Web.Host");
+    setHost("Env.Host.Fallback");
+    sanitizeFeedback(doc);
+    for (const name of ["Static.Web.Host", "Env.Host.Fallback"]) {
+      const values = variableValues(doc, name).filter((v) => v !== null);
+      assert.ok(values.length > 0, name);
+      assert.deepEqual([...new Set(values)], ["app.example.com"], name);
+    }
+  });
+
+  it("disconnects a WebsocketClient on the LAN, keeps a production one", () => {
+    const urlAfterSanitize = (url: string) => {
+      const doc = savedClient();
+      const ws = allSlots(doc.root()).find((slot) => slot.name() === "WS");
+      assert.ok(ws);
+      const client = ws.components().findIndex(({ typeName }) =>
+        typeName === "[FrooxEngine]FrooxEngine.WebsocketClient",
+      );
+      ws.setComponentValue(client, "URL", str(url));
+      ws.setComponentValue(client, "IsConnected", bool(true));
+      sanitizeFeedback(doc);
+      return [
+        ws.componentValue(client, "URL"),
+        ws.componentValue(client, "IsConnected"),
+      ];
+    };
+    assert.deepEqual(urlAfterSanitize("wss://192.168.1.2:3100/"), [
+      str(""),
+      bool(false),
+    ]);
+    assert.deepEqual(urlAfterSanitize("wss://app.example.com/"), [
+      str("wss://app.example.com/"),
+      bool(true),
+    ]);
+  });
+
+  it("clears a cloud variable's local fallback, keeps one that is not a host", () => {
+    const fallbacksAfterSanitize = (value: string) => {
+      const doc = savedClient();
+      const drivers = allSlots(doc.root()).flatMap((slot) =>
+        slot
+          .components()
+          .map(({ typeName }, i) => ({ slot, i, typeName }))
+          .filter(({ typeName }) =>
+            typeName.startsWith("[FrooxEngine]FrooxEngine.CloudValueVariableDriver<"),
+          ),
+      );
+      assert.ok(drivers.length > 0);
+      for (const { slot, i } of drivers) {
+        slot.setComponentValue(i, "FallbackValue", str(value));
+      }
+      sanitizeFeedback(doc);
+      return [
+        ...new Set(
+          drivers.map(({ slot, i }) =>
+            stringOf(slot.componentValue(i, "FallbackValue")),
+          ),
+        ),
+      ];
+    };
+    assert.deepEqual(fallbacksAfterSanitize("localhost:3100"), [""]);
+    assert.deepEqual(fallbacksAfterSanitize("192.168.1.2"), [""]);
+    assert.deepEqual(fallbacksAfterSanitize("app.example.com"), ["app.example.com"]);
+    for (const text of ["Guest", "My App", "true", "42", "mypc"]) {
+      assert.deepEqual(fallbacksAfterSanitize(text), [text], text);
+    }
+  });
+
+  it("tells development values from production ones", () => {
+    const development = [
+      "localhost:3100",
+      "LOCALHOST",
+      "app.localhost:3000",
+      "mypc.local:3100",
+      "127.0.0.1:3100",
+      "10.0.0.5",
+      "172.16.1.2:80",
+      "172.31.255.255",
+      "192.168.1.20:3100",
+      "169.254.1.1",
+      "0.0.0.0:3100",
+      "[::1]:3100",
+      "http://app.example.com/",
+      "ws://app.example.com/ws",
+      "wss://localhost:3100/ws",
+      "https://user@192.168.0.3:8443/",
+      "HTTP://app.example.com/",
+      "@ws://localhost:3100/",
+      "  wss://localhost:3100  ",
+      "desktop-abc:3100",
+      "localhost.",
+      "app.local.",
+      "mypc.lan",
+      "host.docker.internal",
+      "nas.home.arpa",
+      "100.64.0.1",
+      "100.127.255.254",
+      "::1",
+      "[0:0:0:0:0:0:0:1]:3100",
+      "[::]:3100",
+      "[fe80::1]",
+      "[fd12:3456::1]:3100",
+      "[::ffff:127.0.0.1]:3100",
+    ];
+    const production = [
+      "app.example.com",
+      "app.example.com:443",
+      "wss://app.example.com/ws",
+      "https://app.example.com/",
+      "172.32.0.1",
+      "11.0.0.1",
+      "192.169.0.1",
+      "localhost.example.com",
+      "https://app.example.com/?next=http://x",
+      "wss://app.example.com/p?r=ws://",
+      "100.63.0.1",
+      "100.128.0.1",
+      "10.0.0.256",
+      "10..0.1",
+      "0x0a.0.0.1",
+      "[2001:db8::1]:443",
+      "[::ffff:8.8.8.8]",
+      "",
+    ];
+    for (const value of development) {
+      assert.equal(isDevelopmentValue(value), true, value);
+    }
+    for (const value of production) {
+      assert.equal(isDevelopmentValue(value), false, value);
+    }
   });
 });
 
